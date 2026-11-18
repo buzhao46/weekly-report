@@ -1,0 +1,3574 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>周报工作台 · 改版设计原型 v2.0（评审稿）</title>
+<style>
+/* ============================================================
+   周报工作台 · 设计原型 v2.0「编辑部 · 墨韵」
+   Design Direction: Editorial / warm paper / ink / vermilion
+   ============================================================ */
+:root {
+  /* 纸与墨 */
+  --paper: #f7f3ea;          /* 页面底 · 暖纸 */
+  --paper-deep: #efe9db;     /* 侧栏 / 沉底 */
+  --card: #fffdf8;           /* 卡片面 */
+  --ink: #221f19;            /* 主文字 · 墨 */
+  --ink-soft: #5c564a;       /* 次级文字 */
+  --ink-faint: #8f887a;      /* 辅助文字 */
+  --line: #e2dbcb;           /* 边框 */
+  --line-strong: #c9c0ab;
+  --card-line: #d8cfba;      /* 卡片边界：比分隔线清晰、比控件边框柔和 */
+
+  /* 朱砂 · 品牌主色（操作 / 品牌 / 点赞） */
+  --zhu: #bf3b26;
+  --zhu-deep: #a02e1c;
+  --zhu-soft: #f7e8e2;
+
+  /* 松绿 · 计划 / 成功语义 */
+  --pine: #2f5d50;
+  --pine-soft: #e6efe9;
+
+  /* 赭黄 · 草稿 / 提示 */
+  --ochre: #a86b1f;
+  --ochre-soft: #f6ecd9;
+
+  /* 靛青 · 部门 / 信息 */
+  --indigo: #34537a;
+  --indigo-soft: #e7edf5;
+
+  /* 字体 */
+  --serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "SimSun", serif;
+  --sans: -apple-system, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+
+  /* 间距（4px 基） */
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 20px; --s6: 24px; --s7: 28px; --s8: 32px; --s12: 48px;
+
+  --radius: 6px;
+  --shadow: 0 1px 2px rgba(60,50,30,.06), 0 4px 14px rgba(60,50,30,.07);
+  --ease: cubic-bezier(.22,1,.36,1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body {
+  font-family: var(--sans);
+  background: var(--paper);
+  color: var(--ink);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+::selection { background: var(--zhu-soft); color: var(--zhu-deep); }
+
+button { font-family: inherit; cursor: pointer; }
+input, textarea, select { font-family: inherit; color: inherit; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ---------- 顶栏 ---------- */
+.topbar {
+  position: sticky; top: 0; z-index: 40;
+  display: flex; align-items: center; gap: var(--s6);
+  padding: 0 var(--s8);
+  height: 60px;
+  background: rgba(247,243,234,.92);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--line);
+}
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand-seal {
+  width: 36px; height: 36px; border-radius: 8px;
+  background: var(--zhu); color: #fff8ef;
+  font-family: var(--serif); font-size: 20px; font-weight: 700;
+  display: grid; place-items: center;
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.28);
+}
+.brand-name { font-family: var(--serif); font-size: 19px; font-weight: 700; letter-spacing: 2px; }
+.brand-name small { display: block; font-family: var(--sans); font-size: 10px; font-weight: 400; letter-spacing: 3px; color: var(--ink-faint); }
+
+.nav { display: flex; gap: 2px; flex: 1; }
+.nav button {
+  border: none; background: transparent;
+  font-size: 14px; color: var(--ink-soft);
+  padding: 8px 14px; border-radius: var(--radius);
+  transition: all .18s var(--ease);
+  position: relative;
+}
+.nav button:hover { background: var(--paper-deep); color: var(--ink); }
+.nav button.active { color: var(--zhu-deep); background: var(--zhu-soft); font-weight: 600; }
+.nav .badge-dot {
+  position: absolute; top: 6px; right: 6px;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--zhu);
+}
+.me { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--ink-soft); position: relative; cursor: pointer; padding: 4px 8px; border-radius: var(--radius); transition: background .16s var(--ease); user-select: none; }
+.me:hover, .me.open { background: color-mix(in srgb, var(--paper-deep) 75%, transparent); }
+.avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--pine); color: #f2f7f0;
+  display: grid; place-items: center; font-size: 13px; font-weight: 600;
+}
+/* 头像下拉菜单 */
+.me-menu {
+  position: absolute; right: 0; top: calc(100% + 6px); min-width: 172px;
+  background: var(--card); border: 1px solid var(--card-line); border-radius: var(--radius);
+  box-shadow: 0 10px 30px rgba(30,25,15,.16); padding: 6px;
+  display: none; z-index: 150;
+}
+.me.open .me-menu { display: block; animation: menuIn .18s var(--ease); }
+@keyframes menuIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.mm-head { padding: 8px 10px 10px; border-bottom: 1px dashed var(--line); margin-bottom: 6px; display: flex; flex-direction: column; gap: 2px; }
+.mm-head b { font-size: 14px; color: var(--ink); }
+.mm-head span { font-size: 11.5px; color: var(--ink-faint); }
+.mm-item { display: block; width: 100%; text-align: left; border: none; background: none; font-family: inherit; font-size: 13px; color: var(--ink-soft); padding: 8px 10px; border-radius: 4px; cursor: pointer; transition: background .14s var(--ease); }
+.mm-item:hover { background: var(--paper-deep); color: var(--ink); }
+.mm-item.danger { color: var(--zhu); }
+.mm-item.danger:hover { background: var(--zhu-soft); color: var(--zhu); }
+
+/* ---------- 通知系统 ---------- */
+.bell { position: relative; display: flex; align-items: center; color: var(--ink-soft); cursor: pointer; padding: 7px 9px; border-radius: var(--radius); transition: background .16s var(--ease); user-select: none; }
+.bell:hover, .bell.open { background: color-mix(in srgb, var(--paper-deep) 75%, transparent); color: var(--ink); }
+.bell svg { width: 19px; height: 19px; display: block; }
+.bell-badge { position: absolute; top: 0; right: -1px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: var(--zhu); color: #fff8ef; font-size: 10.5px; font-weight: 600; display: grid; place-items: center; box-shadow: 0 0 0 2px var(--paper); }
+@keyframes bellPulse { 0% { transform: scale(1); } 40% { transform: scale(1.3); } 100% { transform: scale(1); } }
+.bell-badge.pulse { animation: bellPulse .5s var(--ease); }
+.noti-pop { position: absolute; right: 0; top: calc(100% + 6px); width: 380px; background: var(--card); border: 1px solid var(--card-line); border-radius: var(--radius); box-shadow: 0 10px 30px rgba(30,25,15,.16); display: none; z-index: 150; overflow: hidden; }
+.bell.open .noti-pop { display: block; animation: menuIn .18s var(--ease); }
+.noti-head { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px dashed var(--line); }
+.noti-head b { font-size: 14px; font-family: var(--serif); letter-spacing: 1px; }
+.noti-head .ncount { font-size: 11.5px; color: var(--ink-faint); }
+.noti-head .spacer { flex: 1; }
+.noti-head button { border: none; background: none; font-size: 12px; color: var(--zhu-deep); cursor: pointer; padding: 3px 8px; border-radius: 4px; transition: background .14s var(--ease); }
+.noti-head button:hover { background: var(--zhu-soft); }
+.noti-list { max-height: 380px; overflow-y: auto; }
+.noti-item { display: flex; gap: 10px; padding: 11px 14px; border-bottom: 1px solid var(--line); cursor: pointer; position: relative; transition: background .14s var(--ease); }
+.noti-item:last-child { border-bottom: none; }
+.noti-item:hover { background: #fffef9; }
+.noti-item.unread { background: color-mix(in srgb, var(--zhu-soft) 36%, transparent); }
+.noti-item.unread:hover { background: color-mix(in srgb, var(--zhu-soft) 55%, transparent); }
+.noti-ico { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; flex: none; font-size: 12px; font-weight: 600; color: #fff8ef; font-family: var(--serif); }
+.noti-txt { min-width: 0; flex: 1; padding-right: 12px; }
+.noti-txt p { font-size: 12.8px; color: var(--ink); line-height: 1.55; }
+.noti-txt p b { font-weight: 600; }
+.noti-txt time { font-size: 11px; color: var(--ink-faint); display: block; margin-top: 2px; }
+.noti-dot { position: absolute; right: 12px; top: 16px; width: 7px; height: 7px; border-radius: 50%; background: var(--zhu); }
+.noti-empty { padding: 28px 0 30px; text-align: center; font-size: 12.5px; color: var(--ink-faint); line-height: 1.8; }
+.noti-foot { display: flex; align-items: center; padding: 8px 14px; font-size: 11.5px; color: var(--ink-faint); border-top: 1px dashed var(--line); background: var(--paper-deep); }
+.noti-foot button { border: none; background: none; font-size: 11.5px; color: var(--zhu-deep); cursor: pointer; padding: 2px 6px; border-radius: 4px; margin-left: auto; }
+.noti-foot button:hover { background: var(--zhu-soft); }
+@media (max-width: 960px) { .noti-pop { width: min(380px, calc(100vw - 32px)); } }
+
+/* ---------- 评审导览 ---------- */
+.review-bar {
+  background: #2b2822; color: #efe8d8;
+  font-size: 12.5px;
+  padding: 10px var(--s8);
+  display: flex; align-items: center; gap: var(--s4);
+}
+.review-bar strong { color: #f2c944; font-family: var(--serif); letter-spacing: 1px; }
+.review-bar .spacer { flex: 1; }
+.review-bar button {
+  background: transparent; border: 1px solid #5a5344; color: #efe8d8;
+  font-size: 12px; padding: 4px 12px; border-radius: 999px;
+  transition: all .18s;
+}
+.review-bar button:hover { border-color: #f2c944; color: #f2c944; }
+.review-panel {
+  display: none;
+  background: #2b2822; color: #d8d0bd;
+  padding: var(--s4) var(--s8) var(--s6);
+  border-bottom: 3px solid var(--zhu);
+  font-size: 13px;
+  columns: 2; column-gap: var(--s8);
+}
+.review-panel.show { display: block; }
+.review-panel li { margin: 0 0 6px 18px; break-inside: avoid; }
+.review-panel b { color: #f2c944; font-weight: 600; }
+.review-panel .tag {
+  display: inline-block; font-size: 11px; padding: 0 6px;
+  border: 1px solid #5a5344; border-radius: 4px; margin-right: 6px; color: #bfb69e;
+}
+
+/* ---------- 布局骨架 ---------- */
+.stage { max-width: 1180px; margin: 0 auto; padding: var(--s8) var(--s8) 96px; }
+.view { display: none; animation: viewIn .32s var(--ease); }
+.view.active { display: block; }
+@keyframes viewIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+.page-head { display: flex; align-items: baseline; gap: var(--s4); margin-bottom: var(--s6); }
+.page-title { font-family: var(--serif); font-size: 26px; font-weight: 700; letter-spacing: 1px; }
+.page-sub { color: var(--ink-faint); font-size: 13px; }
+
+/* ---------- 通用组件 ---------- */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid var(--line-strong);
+  background: var(--card); color: var(--ink);
+  font-size: 13.5px; padding: 8px 16px; border-radius: var(--radius);
+  transition: all .16s var(--ease);
+  white-space: nowrap;
+}
+.btn:hover { border-color: var(--ink-faint); background: #fff; }
+.btn.primary { background: var(--zhu); border-color: var(--zhu); color: #fff8ef; font-weight: 600; }
+.btn.primary:hover { background: var(--zhu-deep); border-color: var(--zhu-deep); }
+.btn.ghost { border-color: transparent; background: transparent; color: var(--ink-soft); }
+.btn.ghost:hover { background: var(--paper-deep); color: var(--ink); }
+.btn.danger-ghost { border-color: transparent; background: transparent; color: var(--zhu); }
+.btn.danger-ghost:hover { background: var(--zhu-soft); }
+.btn.sm { font-size: 12.5px; padding: 4px 10px; }
+
+.tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11.5px; font-weight: 600; letter-spacing: .5px;
+  padding: 2px 9px; border-radius: 999px;
+}
+.tag.draft { background: var(--ochre-soft); color: var(--ochre); }
+.tag.submitted { background: var(--pine-soft); color: var(--pine); }
+.tag.dept { background: var(--indigo-soft); color: var(--indigo); font-weight: 500; }
+.tag.v2 { background: #ece7f6; color: #5b4694; }
+.tag.edited { background: var(--indigo-soft, #e7e9f7); color: #3d4a9e; }
+.row-change { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 11.5px; color: #3d4a9e; }
+.row-change svg { width: 13px; height: 13px; flex: none; }
+.tag.soft { background: var(--paper-deep); color: var(--ink-faint); text-decoration: line-through; }
+.tag.auto { background: var(--zhu-soft); color: var(--zhu-deep); }
+.tag.role-admin { background: var(--zhu-soft); color: var(--zhu-deep); }
+.tag.role-member { background: var(--paper-deep); color: var(--ink-soft); }
+.role-cell { white-space: nowrap; }
+.role-guard-hint { font-size: 12px; color: var(--ink-faint); }
+
+.notice {
+  display: flex; gap: 10px; align-items: flex-start;
+  background: var(--card); border: 1px solid var(--card-line);
+  border-left: 3px solid var(--zhu);
+  border-radius: var(--radius);
+  padding: 10px 14px; font-size: 13px; color: var(--ink-soft);
+  margin-bottom: var(--s4);
+}
+.notice.pine { border-left-color: var(--pine); }
+.notice.edit { border-left-color: #3d4a9e; background: #eef0fb; align-items: center; }
+.notice.edit .btn { margin-left: auto; flex: none; }
+.notice b { color: var(--ink); font-weight: 600; }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12.5px; color: var(--ink-soft);
+  background: var(--paper-deep); border: 1px solid var(--line);
+  padding: 3px 10px; border-radius: 999px;
+}
+.chip .x { color: var(--ink-faint); cursor: pointer; font-style: normal; }
+.chip .x:hover { color: var(--zhu); }
+
+.divider-label {
+  display: flex; align-items: center; gap: var(--s3);
+  margin: var(--s8) 0 var(--s4);
+}
+.divider-label::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.divider-label h2 { font-family: var(--serif); font-size: 17px; letter-spacing: 2px; white-space: nowrap; }
+.divider-label .note { font-size: 12px; color: var(--ink-faint); white-space: nowrap; }
+
+.icon { width: 15px; height: 15px; flex: none; }
+
+/* ================= 视图一：写周报 ================= */
+.editor-grid { display: grid; grid-template-columns: 1fr 320px; gap: var(--s6); align-items: start; }
+
+/* 周期横幅 */
+.period-hero {
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--card-line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--s6) var(--s8) var(--s5);
+  margin-bottom: var(--s6);
+  overflow: hidden;
+}
+.period-hero::before {
+  content: "";
+  position: absolute; inset: 0 auto 0 0; width: 6px;
+  background: var(--zhu);
+}
+.period-tabs { display: flex; gap: 0; margin-bottom: var(--s4); }
+.period-tabs button {
+  border: 1px solid var(--line-strong); background: var(--card);
+  font-size: 13px; padding: 6px 20px; color: var(--ink-soft);
+}
+.period-tabs button:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+.period-tabs button:last-child { border-radius: 0 var(--radius) var(--radius) 0; border-left: none; }
+.period-tabs button.on { background: var(--ink); border-color: var(--ink); color: #f3eee2; font-weight: 600; }
+.period-tabs button:disabled { opacity: .38; cursor: not-allowed; }
+
+.week-line { display: flex; align-items: flex-end; gap: var(--s5); flex-wrap: wrap; }
+.week-big {
+  font-family: var(--serif);
+  font-size: 54px; font-weight: 900; line-height: 1;
+  letter-spacing: 2px;
+}
+.week-big .wk { color: var(--zhu); }
+.week-range { font-size: 15px; color: var(--ink-soft); padding-bottom: 6px; }
+.week-range b { color: var(--ink); font-family: var(--serif); }
+.week-actions { margin-left: auto; display: flex; gap: var(--s3); align-items: center; padding-bottom: 4px; }
+.week-meta { margin-top: var(--s3); font-size: 12.5px; color: var(--ink-faint); display: flex; gap: var(--s4); flex-wrap: wrap; }
+.week-meta .dot::before { content: "·"; margin-right: 8px; }
+
+/* 条目块 */
+.block-card {
+  background: var(--card); border: 1px solid var(--card-line);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: var(--s4) var(--s5);
+  margin-bottom: var(--s3);
+  transition: border-color .2s;
+}
+.block-card:focus-within { border-color: var(--zhu); }
+.block-card .block-head {
+  display: flex; align-items: center; gap: var(--s3);
+  margin-bottom: var(--s2);
+}
+.block-no {
+  font-family: var(--serif); font-size: 13px; font-weight: 700;
+  color: var(--zhu); border: 1px solid var(--zhu);
+  width: 22px; height: 22px; border-radius: 50%;
+  display: grid; place-items: center; flex: none;
+}
+.block-card textarea {
+  width: 100%; min-height: 84px;
+  border: none; background: transparent; resize: vertical;
+  font-size: 14px; line-height: 1.75; outline: none;
+}
+.block-card textarea::placeholder { color: var(--ink-faint); }
+.block-foot {
+  display: flex; align-items: center; gap: var(--s2);
+  border-top: 1px dashed var(--line);
+  padding-top: var(--s2); margin-top: var(--s2);
+}
+.attach-btn {
+  border: none; background: transparent; color: var(--ink-faint);
+  font-size: 12.5px; display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 8px; border-radius: 4px;
+}
+.attach-btn:hover { background: var(--paper-deep); color: var(--ink); }
+.block-foot .flex { flex: 1; }
+.block-del { border: none; background: transparent; color: var(--ink-faint); font-size: 12.5px; padding: 4px 8px; }
+.block-del:hover { color: var(--zhu); }
+.add-block {
+  width: 100%; border: 1.5px dashed var(--line-strong);
+  background: transparent; border-radius: var(--radius);
+  color: var(--ink-faint); font-size: 13.5px;
+  padding: 12px; display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: all .18s;
+}
+.add-block:hover { border-color: var(--zhu); color: var(--zhu); background: var(--zhu-soft); }
+
+.attach-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--indigo);
+  background: var(--indigo-soft);
+  padding: 3px 10px; border-radius: 4px;
+}
+.attach-chip .size { color: var(--ink-faint); }
+
+/* 侧栏 */
+.rail-card {
+  background: var(--card); border: 1px solid var(--card-line);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: var(--s5);
+  margin-bottom: var(--s4);
+}
+.rail-card h3 {
+  font-family: var(--serif); font-size: 15px; letter-spacing: 1px;
+  margin-bottom: var(--s3);
+  display: flex; align-items: center; gap: 8px;
+}
+.radio-row { display: flex; align-items: center; gap: 8px; font-size: 13.5px; padding: 6px 0; cursor: pointer; }
+.radio-row input { accent-color: var(--zhu); }
+.radio-row .sub { font-size: 11.5px; color: var(--ink-faint); margin-left: auto; }
+.custom-box {
+  border-top: 1px dashed var(--line);
+  margin-top: var(--s2); padding-top: var(--s3);
+  display: none;
+}
+.custom-box.show { display: block; }
+.chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin: var(--s2) 0 var(--s3); }
+.chip.add-chip { border-style: dashed; cursor: pointer; color: var(--ink-faint); }
+.chip.add-chip:hover { color: var(--zhu); border-color: var(--zhu); }
+.import-note {
+  font-size: 12px; color: var(--pine);
+  background: var(--pine-soft);
+  padding: 6px 10px; border-radius: 4px;
+  display: flex; gap: 6px; align-items: flex-start;
+  margin-bottom: var(--s3);
+}
+.submit-zone { display: flex; gap: var(--s3); align-items: center; }
+.submit-zone .hint { font-size: 11.5px; color: var(--ink-faint); line-height: 1.5; }
+.vis-row { display: flex; gap: var(--s8); flex-wrap: wrap; }
+.vis-row .radio-row { flex: none; }
+.vis-cols { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s6); }
+/* 可见范围 · 添加弹卡 */
+.pick-pop {
+  position: fixed; z-index: 180; width: 268px;
+  background: var(--card); border: 1px solid var(--card-line); border-radius: var(--radius);
+  box-shadow: 0 12px 34px rgba(30,25,15,.18);
+  display: none; overflow: hidden;
+  animation: menuIn .16s var(--ease);
+}
+.pick-pop.show { display: block; }
+.pick-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px dashed var(--line); font-size: 13px; font-weight: 600; }
+.pick-head .cnt { font-size: 11.5px; color: var(--ink-faint); font-weight: 400; }
+.pick-search { margin: 10px 12px 6px; }
+.pick-search input { width: 100%; box-sizing: border-box; border: 1px solid var(--line-strong); border-radius: var(--radius); padding: 7px 10px; font-size: 12.5px; font-family: inherit; outline: none; transition: border-color .14s var(--ease); }
+.pick-search input:focus { border-color: var(--zhu); }
+.pick-list { max-height: 224px; overflow-y: auto; padding: 6px; }
+.pick-item {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  border: none; background: none; font-family: inherit; font-size: 13px;
+  color: var(--ink); padding: 8px 10px; border-radius: 4px;
+  cursor: pointer; text-align: left; transition: background .12s var(--ease);
+}
+.pick-item:hover { background: var(--paper-deep); }
+.pick-item .p-ava { width: 24px; height: 24px; border-radius: 50%; background: var(--indigo-soft); color: var(--indigo); font-size: 11px; font-weight: 600; display: grid; place-items: center; flex: none; }
+.pick-item.dept-item .p-ava { background: var(--zhu-soft); color: var(--zhu-deep); border-radius: 6px; font-family: var(--serif); }
+.pick-item .p-sub { margin-left: auto; font-size: 11px; color: var(--ink-faint); }
+.pick-item .p-check { color: var(--pine); font-weight: 700; flex: none; width: 16px; font-size: 13px; visibility: hidden; }
+.pick-item.on .p-check { visibility: visible; }
+.pick-empty { padding: 18px; text-align: center; font-size: 12px; color: var(--ink-faint); }
+.pick-foot { padding: 8px 12px; border-top: 1px dashed var(--line); font-size: 11px; color: var(--ink-faint); background: var(--paper-deep); }
+@keyframes chipIn { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: none; } }
+.chip.pop { animation: chipIn .22s var(--ease); }
+.chip.out { opacity: 0; transform: scale(.7); transition: all .16s var(--ease); }
+
+/* 周期选择弹层 */
+.modal-mask {
+  position: fixed; inset: 0; z-index: 60;
+  background: rgba(34,31,25,.45);
+  display: none; place-items: center;
+}
+.modal-mask.show { display: grid; }
+.modal {
+  width: 480px; max-width: calc(100vw - 32px);
+  background: var(--card); border-radius: 10px;
+  box-shadow: 0 24px 60px rgba(30,25,15,.3);
+  padding: var(--s6);
+  animation: pop .22s var(--ease);
+}
+.modal.wide { width: 760px; }
+.modal-head .modal-meta { font-size: 12px; color: var(--ink-faint); }
+.modal-x {
+  background: transparent; border: none; cursor: pointer;
+  font-size: 18px; color: var(--ink-faint); line-height: 1; padding: 4px;
+}
+.modal-x:hover { color: var(--zhu); }
+
+/* 变更记录 diff */
+.diff-meta {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  font-size: 12px; color: var(--ink-faint);
+  padding-bottom: var(--s3); margin-bottom: var(--s4);
+  border-bottom: 1px dashed var(--line-strong);
+}
+.diff-meta b { color: var(--ink-soft); font-weight: 600; }
+.diff-legend { margin-left: auto; display: flex; gap: 14px; font-size: 11.5px; }
+.diff-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.diff-legend i { font-style: normal; width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.diff-legend .lg-del i { background: var(--zhu-soft); border: 1px solid var(--zhu); }
+.diff-legend .lg-add i { background: var(--pine-soft); border: 1px solid var(--pine); }
+
+.diff-sec { margin-bottom: var(--s4); }
+.diff-sec-head {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--serif); font-size: 14px; letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+.diff-sec-head .diff-badge {
+  font-family: var(--sans); font-size: 10.5px; letter-spacing: 0;
+  border-radius: 999px; padding: 1px 8px; font-weight: 600;
+}
+.diff-sec-head .diff-badge.add { background: var(--pine-soft); color: var(--pine); }
+.diff-sec-head .diff-badge.mod { background: var(--ochre-soft); color: var(--ochre); }
+.diff-sec-head .diff-badge.unch { background: var(--ink-faint); color: var(--card); }
+.diff-line {
+  display: flex; gap: 10px; align-items: baseline;
+  border-radius: 6px; padding: 7px 12px; margin-bottom: 4px;
+  font-size: 13px; line-height: 1.65;
+}
+.diff-line .sign { font-weight: 700; flex: none; font-size: 13px; }
+.diff-line.ctx { color: var(--ink-faint); background: transparent; padding-left: 30px; }
+.diff-line.ctx .sign { visibility: hidden; }
+.diff-line.del { background: var(--zhu-soft); color: var(--zhu-deep); text-decoration: line-through; text-decoration-color: rgba(191,59,38,.45); }
+.diff-line.del .sign { color: var(--zhu); }
+.diff-line.add { background: var(--pine-soft); color: var(--pine); }
+.diff-line.add .sign { color: var(--pine); }
+.diff-line .attach-in {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: #fff; border: 1px solid var(--line-strong);
+  border-radius: 999px; padding: 2px 10px; font-size: 12px;
+}
+.diff-foot { display: flex; justify-content: center; gap: 10px; margin-top: var(--s5); }
+
+/* 版本对比条 + 版本时间线 */
+.ver-bar { display: flex; align-items: center; gap: 10px; margin: 0 0 var(--s3); flex-wrap: wrap; }
+.ver-bar .ver-label { font-size: 12px; color: var(--ink-faint); }
+.ver-select {
+  font-family: var(--serif); font-size: 13px; color: var(--ink);
+  background: var(--card); border: 1px solid var(--line-strong); border-radius: 8px;
+  padding: 7px 10px; cursor: pointer; max-width: 300px;
+}
+.ver-select:focus { outline: none; border-color: var(--zhu); box-shadow: 0 0 0 3px var(--zhu-soft); }
+.ver-arrow { font-family: var(--serif); font-size: 15px; font-weight: 700; color: var(--zhu); }
+.ver-swap {
+  font-size: 12px; color: var(--ink-soft); background: transparent;
+  border: 1px solid var(--line-strong); border-radius: 8px; padding: 6px 10px; cursor: pointer;
+}
+.ver-swap:hover { color: var(--zhu); border-color: var(--zhu); background: var(--zhu-soft); }
+.ver-timeline { border: 1px solid var(--line-strong); border-radius: 10px; overflow: hidden; margin-bottom: var(--s4); }
+.ver-cap {
+  display: flex; align-items: center; gap: 8px; padding: 7px 14px;
+  background: var(--paper-deep); font-size: 11.5px; color: var(--ink-soft);
+  border-bottom: 1px solid var(--line-strong);
+}
+.ver-cap .ver-hint { margin-left: auto; color: var(--ink-faint); font-size: 11px; }
+.ver-line {
+  display: flex; align-items: center; gap: 10px; padding: 9px 14px;
+  border-top: 1px solid var(--line); font-size: 12.5px; transition: background .15s;
+}
+.ver-line:first-of-type { border-top: none; }
+.ver-line.sel-from { background: var(--zhu-soft); }
+.ver-line.sel-to { background: var(--pine-soft); }
+.ver-line.sel-from.sel-to { background: color-mix(in srgb, var(--zhu-soft) 50%, var(--pine-soft)); }
+.ver-no {
+  flex: none; font-family: var(--serif); font-size: 12px; font-weight: 700;
+  width: 30px; height: 22px; display: inline-flex; align-items: center; justify-content: center;
+  background: var(--paper-deep); color: var(--ink-soft); border: 1px solid var(--line-strong); border-radius: 6px;
+}
+.ver-line.sel-from .ver-no { background: var(--zhu); border-color: var(--zhu); color: #fff; }
+.ver-line.sel-to .ver-no { background: var(--pine); border-color: var(--pine); color: #fff; }
+.ver-info { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.ver-info b { font-weight: 600; color: var(--ink); font-size: 12.5px; }
+.ver-info span { color: var(--ink-faint); font-size: 11.5px; }
+.ver-line .ver-role { margin-left: auto; flex: none; }
+.ver-ops { flex: none; display: flex; gap: 6px; }
+.ver-ops button {
+  font-size: 11px; padding: 3px 9px; border-radius: 999px; cursor: pointer;
+  background: transparent; border: 1px solid var(--line-strong); color: var(--ink-soft);
+}
+.ver-ops button:hover { border-color: var(--zhu); color: var(--zhu); background: var(--zhu-soft); }
+.ver-ops button.on { background: var(--zhu); border-color: var(--zhu); color: #fff; cursor: default; }
+.ver-ops button.on.to { background: var(--pine); border-color: var(--pine); }
+
+/* 转发弹层 */
+.fw-report {
+  display: flex; gap: 10px; align-items: center;
+  background: var(--paper-2, #f7f3ea); border: 1px solid var(--line-strong);
+  border-radius: 8px; padding: 10px 14px; margin-bottom: var(--s4);
+}
+.fw-report .avatar { width: 30px; height: 30px; font-size: 13px; flex: none; }
+.fw-report .fw-title { font-size: 13px; font-weight: 600; color: var(--ink); }
+.fw-report .fw-excerpt {
+  font-size: 12px; color: var(--ink-faint); margin-top: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 520px;
+}
+.fw-label { font-size: 12px; color: var(--ink-faint); margin: 0 0 6px; }
+.fw-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: var(--s4); }
+.fw-note-wrap { position: relative; }
+.fw-note {
+  width: 100%; box-sizing: border-box; resize: vertical; min-height: 64px;
+  border: 1px solid var(--line-strong); border-radius: 6px;
+  padding: 9px 12px 24px; font-size: 13px; font-family: var(--sans);
+  background: #fff; color: var(--ink);
+}
+.fw-note:focus { outline: none; border-color: var(--zhu); }
+.fw-count {
+  position: absolute; right: 10px; bottom: 8px;
+  font-size: 11px; color: var(--ink-faint); pointer-events: none;
+}
+.fw-hint {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11.5px; color: var(--ink-faint); margin-bottom: var(--s4);
+}
+.fw-hint svg { width: 13px; height: 13px; flex: none; color: var(--pine); }
+
+/* ---------- AI 总结弹层 ---------- */
+.ai-engines { display: flex; gap: 8px; margin-bottom: var(--s4); }
+.ai-engine { border: 1px solid var(--line-strong); background: var(--card); border-radius: 8px; padding: 9px 14px; font-size: 12.5px; display: flex; align-items: center; gap: 7px; transition: all .16s var(--ease); }
+.ai-engine .e-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-faint); flex: none; }
+.ai-engine.on { border-color: var(--zhu); background: color-mix(in srgb, var(--zhu) 7%, var(--card)); }
+.ai-engine.on .e-dot { background: var(--zhu); box-shadow: 0 0 0 3px color-mix(in srgb, var(--zhu) 18%, transparent); }
+.ai-lbl { font-size: 12px; color: var(--ink-faint); margin: var(--s3) 0 6px; }
+.ai-chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.ai-chip { border: 1px solid var(--line-strong); background: var(--card); border-radius: 999px; padding: 4px 12px; font-size: 12px; transition: all .14s var(--ease); }
+.ai-chip.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.ai-dates { display: flex; gap: 8px; align-items: center; }
+.ai-dates input { border: 1px solid var(--line-strong); border-radius: 6px; padding: 5px 8px; font-size: 12.5px; background: var(--card); color: var(--ink); font-family: inherit; }
+.ai-out { margin-top: var(--s4); border: 1px solid var(--line); border-radius: 8px; background: color-mix(in srgb, var(--paper) 60%, var(--card)); padding: var(--s4); min-height: 120px; }
+.ai-out .ai-placeholder { font-size: 12.5px; color: var(--ink-faint); line-height: 1.9; }
+.ai-out .ai-body { font-size: 13px; line-height: 1.9; color: var(--ink); }
+.ai-out .ai-body h4 { font-family: var(--serif); font-size: 13.5px; letter-spacing: 1px; margin: 10px 0 4px; color: var(--zhu); }
+.ai-out .ai-body h4:first-child { margin-top: 0; }
+.ai-out .ai-body li { margin: 0 0 4px 18px; }
+.ai-caret { display: inline-block; width: 7px; height: 14px; background: var(--zhu); vertical-align: -2px; animation: caretBlink .8s steps(1) infinite; }
+@keyframes caretBlink { 50% { opacity: 0; } }
+.ai-status { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--pine); margin-top: var(--s3); min-height: 18px; }
+.ai-status .spin { width: 12px; height: 12px; border: 2px solid color-mix(in srgb, var(--pine) 30%, transparent); border-top-color: var(--pine); border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.ai-meta { font-size: 11.5px; color: var(--ink-faint); margin-top: 6px; }
+.ai-foot { display: flex; justify-content: center; gap: 10px; margin-top: var(--s4); }
+
+/* 成员管理交互 */
+.fm-row { display: flex; align-items: center; gap: 10px; margin-bottom: var(--s3); }
+.fm-row label { width: 76px; flex: none; font-size: 13px; color: var(--ink-soft); text-align: right; }
+.fm-row input, .fm-row select {
+  flex: 1; border: 1px solid var(--line-strong); border-radius: 6px;
+  padding: 8px 10px; font-size: 13px; background: #fff; color: var(--ink);
+}
+.fm-row input:focus, .fm-row select:focus { outline: none; border-color: var(--zhu); }
+.fm-row input[readonly] { background: var(--paper-deep); cursor: default; }
+.gen-pass { letter-spacing: 1px; font-weight: 600; color: var(--zhu-deep); }
+.mem-drop {
+  border: 2px dashed var(--line-strong); border-radius: 8px;
+  padding: var(--s6); text-align: center; cursor: pointer;
+  color: var(--ink-faint); transition: all .15s var(--ease);
+}
+.mem-drop:hover { border-color: var(--zhu); color: var(--ink-soft); }
+.mem-drop.has { border-style: solid; border-color: var(--pine); color: var(--pine); }
+.mem-drop .mem-drop-title { font-size: 13.5px; color: var(--ink-soft); margin-bottom: 4px; }
+.mem-drop.has .mem-drop-title { color: var(--pine); }
+.mem-result {
+  background: var(--paper-deep); border-radius: 8px;
+  padding: var(--s4); margin-top: var(--s4); font-size: 13px;
+}
+.mem-result table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12.5px; background: #fff; }
+.mem-result th, .mem-result td { border-bottom: 1px solid var(--line); padding: 6px 10px; text-align: left; }
+.mem-result .skip { color: var(--zhu); font-size: 11.5px; }
+tr.mem-off td { opacity: .45; }
+tr.mem-new td { animation: rowIn .5s var(--ease); }
+@keyframes rowIn { from { background: var(--pine-soft); } to { background: transparent; } }
+@keyframes pop { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: none; } }
+.modal-head { display: flex; align-items: center; gap: 10px; margin-bottom: var(--s4); }
+.modal-head h3 { font-family: var(--serif); font-size: 18px; letter-spacing: 1px; flex: 1; }
+.pm-quick { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: var(--s4); }
+.pm-chip {
+  border: 1px solid var(--line-strong); background: #fff;
+  border-radius: 999px; font-size: 12.5px; padding: 6px 14px;
+  color: var(--ink-soft); transition: all .15s;
+}
+.pm-chip i { font-style: normal; color: var(--zhu); font-size: 11px; margin-left: 4px; }
+.pm-chip.miss { border-style: dashed; }
+.pm-chip.on { background: var(--ink); border-color: var(--ink); color: #f3eee2; }
+.pm-chip.on i { color: #f2c944; }
+.pm-date-row { display: flex; align-items: center; gap: 10px; margin-bottom: var(--s4); font-size: 13px; color: var(--ink-soft); }
+.pm-date-row input { flex: 1; border: 1px solid var(--line-strong); border-radius: 6px; padding: 7px 10px; font-size: 13px; background: #fff; }
+.pm-date-row input:focus { outline: none; border-color: var(--zhu); }
+.pm-foot { display: block; }
+.pm-preview { display: block; font-size: 12.5px; color: var(--pine); font-weight: 600; line-height: 1.6; margin-bottom: var(--s3); }
+.pm-actions { display: flex; justify-content: center; gap: 10px; }
+
+/* 自查补强：可达性与微交互 */
+:focus-visible { outline: 2px solid var(--zhu); outline-offset: 2px; border-radius: 2px; }
+.btn:active { transform: translateY(1px); }
+.like-btn.liked svg { animation: likePop .32s var(--ease); }
+@keyframes likePop { 0% { transform: scale(.6); } 55% { transform: scale(1.3); } 100% { transform: scale(1); } }
+.toast .toast-act {
+  margin-left: 12px; background: transparent;
+  border: 1px solid rgba(243,238,226,.45); color: #f2c944;
+  border-radius: 999px; padding: 2px 12px; font-size: 12px;
+}
+.toast .toast-act:hover { border-color: #f2c944; background: rgba(242,201,68,.12); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+/* ================= 列表页 ================= */
+.filter-bar {
+  display: flex; gap: var(--s3); align-items: center;
+  background: var(--card); border: 1px solid var(--card-line);
+  border-radius: var(--radius); padding: var(--s3) var(--s4);
+  margin-bottom: var(--s4); flex-wrap: wrap;
+}
+.filter-bar label { font-size: 12.5px; color: var(--ink-faint); }
+.filter-bar select, .filter-bar input[type="date"], .filter-bar input[type="text"] {
+  font-size: 13px; padding: 6px 10px;
+  border: 1px solid var(--line-strong); border-radius: var(--radius);
+  background: #fff; outline: none;
+}
+.filter-bar select:focus, .filter-bar input:focus { border-color: var(--zhu); }
+.filter-bar .flex { flex: 1; }
+
+.report-list { display: flex; flex-direction: column; gap: var(--s3); }
+.row-card {
+  display: flex; align-items: center; gap: var(--s4);
+  background: var(--card); border: 1px solid var(--card-line);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: var(--s3) var(--s5);
+  transition: transform .18s var(--ease), border-color .18s;
+}
+.row-card:hover { transform: translateY(-1px); border-color: var(--line-strong); }
+.row-main { flex: 1; min-width: 0; }
+.row-title { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 2px; }
+.row-title .who { font-weight: 600; font-size: 14.5px; }
+.row-title .when { font-family: var(--serif); font-size: 13.5px; color: var(--ink-soft); }
+.row-excerpt {
+  font-size: 12.5px; color: var(--ink-faint);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 560px;
+}
+.row-stats { display: flex; align-items: center; gap: var(--s4); font-size: 12.5px; color: var(--ink-soft); flex: none; }
+.stat { display: inline-flex; align-items: center; gap: 4px; }
+.row-ops { display: flex; gap: 6px; flex: none; }
+
+.like-btn { border: none; background: transparent; display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; color: var(--ink-soft); padding: 3px 6px; border-radius: 4px; transition: all .15s; }
+.like-btn:hover { background: var(--zhu-soft); color: var(--zhu); }
+.like-btn.liked { color: var(--zhu); font-weight: 600; }
+.like-btn.liked svg { fill: var(--zhu); stroke: var(--zhu); }
+
+/* tabs 分享/转发 */
+.src-tabs { display: flex; gap: var(--s2); margin-bottom: var(--s5); border-bottom: 2px solid var(--line); }
+.src-tabs button {
+  border: none; background: transparent;
+  font-size: 14.5px; color: var(--ink-soft);
+  padding: 10px 4px; margin-right: var(--s6);
+  border-bottom: 2px solid transparent; margin-bottom: -2px;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.src-tabs button.on { color: var(--ink); border-bottom-color: var(--zhu); font-weight: 600; }
+.src-tabs .count { font-size: 11px; background: var(--paper-deep); border-radius: 999px; padding: 1px 8px; color: var(--ink-faint); }
+.src-tabs button.on .count { background: var(--zhu-soft); color: var(--zhu-deep); }
+.forward-from { font-size: 11.5px; color: var(--ink-faint); }
+.forward-from b { color: var(--indigo); font-weight: 600; }
+
+/* ================= 详情页 ================= */
+.detail-wrap { max-width: 860px; margin: 0 auto; }
+.detail-head {
+  text-align: center; padding: var(--s6) 0 var(--s5);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: var(--s6);
+}
+.detail-head .week-cn { font-family: var(--serif); font-size: 34px; font-weight: 900; letter-spacing: 2px; }
+.detail-head .week-cn em { font-style: normal; color: var(--zhu); }
+.detail-meta { display: flex; justify-content: center; gap: var(--s4); margin-top: var(--s3); font-size: 13px; color: var(--ink-soft); flex-wrap: wrap; align-items: center; }
+.detail-actions { display: flex; justify-content: center; gap: var(--s3); margin-top: var(--s4); }
+
+.detail-section { margin-bottom: var(--s8); }
+.detail-section > h2 {
+  font-family: var(--serif); font-size: 18px; letter-spacing: 3px;
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: var(--s4);
+}
+.detail-section > h2::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.detail-section > h2 .mark { color: var(--zhu); font-size: 13px; letter-spacing: 1px; font-family: var(--sans); font-weight: 500; }
+
+.entry { border-left: 2px solid var(--line-strong); padding: 2px 0 2px var(--s4); margin-bottom: var(--s4); }
+.entry .entry-meta { font-size: 12px; color: var(--ink-faint); margin-bottom: 4px; display: flex; gap: 10px; align-items: center; }
+.entry p { font-size: 14.5px; line-height: 1.85; color: var(--ink); }
+.entry .entry-attach { margin-top: var(--s2); display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* 评论 */
+.comment-item { display: flex; gap: 12px; padding: var(--s3) 0; border-bottom: 1px dashed var(--line); }
+.comment-body { flex: 1; }
+.comment-head { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.comment-head .name { font-weight: 600; }
+.comment-head .time { color: var(--ink-faint); font-size: 12px; }
+.comment-text { font-size: 13.5px; margin-top: 2px; line-height: 1.7; }
+.comment-ops { flex: none; display: flex; gap: 4px; align-items: flex-start; }
+.deleted-comment { padding: var(--s3) var(--s4); background: var(--paper-deep); border-radius: var(--radius); font-size: 12.5px; color: var(--ink-faint); display: flex; align-items: center; gap: 10px; margin-bottom: var(--s3); }
+.comment-input {
+  display: flex; gap: var(--s3); margin-top: var(--s4);
+}
+.comment-input textarea {
+  flex: 1; border: 1px solid var(--line-strong); border-radius: var(--radius);
+  background: #fff; padding: 10px 14px; font-size: 13.5px; resize: vertical; min-height: 56px; outline: none;
+}
+.comment-input textarea:focus { border-color: var(--zhu); }
+
+/* ================= 成员管理 ================= */
+.table-card { background: var(--card); border: 1px solid var(--card-line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+table.member { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+table.member th {
+  text-align: left; font-weight: 600; font-size: 12px; letter-spacing: 1px;
+  color: var(--ink-faint); background: var(--paper-deep);
+  padding: 10px 16px; border-bottom: 1px solid var(--line);
+}
+table.member td { padding: 11px 16px; border-bottom: 1px solid var(--line); }
+table.member tr:last-child td { border-bottom: none; }
+table.member tr:hover td { background: #fffef9; }
+.st-on { color: var(--pine); font-weight: 600; font-size: 12.5px; display: inline-flex; align-items: center; gap: 5px; }
+.st-off { color: var(--ink-faint); font-size: 12.5px; display: inline-flex; align-items: center; gap: 5px; }
+.st-on::before, .st-off::before { content: ""; width: 7px; height: 7px; border-radius: 50%; }
+.st-on::before { background: var(--pine); }
+.st-off::before { background: var(--line-strong); }
+
+/* ================= 设置页 · 规格单 ================= */
+.set-grid { display: grid; grid-template-columns: 168px minmax(0, 1fr); gap: var(--s8); align-items: start; max-width: 920px; }
+.set-nav { position: sticky; top: 84px; display: flex; flex-direction: column; gap: 2px; }
+.set-nav .nav-cap { font-size: 11px; letter-spacing: 3px; color: var(--ink-faint); padding: 0 0 var(--s2) 14px; }
+.set-nav a {
+  font-size: 13px; color: var(--ink-soft); text-decoration: none;
+  padding: 8px 12px 8px 13px; border-left: 2px solid transparent; margin-left: -1px;
+  transition: color .16s var(--ease), border-color .16s var(--ease), background .16s var(--ease);
+}
+.set-nav a:hover { color: var(--ink); }
+.set-nav a.on { color: var(--ink); border-left-color: var(--zhu); font-weight: 600; background: color-mix(in srgb, var(--paper-deep) 60%, transparent); }
+.set-sec { margin-bottom: var(--s8); scroll-margin-top: 84px; }
+.set-sec:last-child { margin-bottom: 0; }
+.set-sec-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: var(--s2); }
+.set-sec-head .no { font-family: var(--serif); font-size: 14px; font-weight: 700; color: var(--zhu); }
+.set-sec-head h2 { font-family: var(--serif); font-size: 20px; letter-spacing: 2px; margin: 0; }
+.set-sec-head .tail { flex: 1; height: 1px; background: var(--line); align-self: center; }
+.set-sec-head .aux { font-size: 12px; color: var(--ink-faint); white-space: nowrap; }
+.set-sec > .desc { font-size: 12.5px; color: var(--ink-soft); margin-bottom: var(--s4); }
+.set-card { background: var(--card); border: 1px solid var(--card-line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+/* 刊期行 */
+.period-row { display: flex; align-items: center; gap: var(--s4); padding: var(--s4) var(--s5); border-bottom: 1px dashed var(--line); transition: opacity .25s var(--ease); }
+.period-row:last-child { border-bottom: none; }
+.period-row .glyph {
+  font-family: var(--serif); font-size: 24px; font-weight: 900;
+  width: 48px; height: 48px; flex: none;
+  display: grid; place-items: center;
+  background: var(--paper); border: 1px solid var(--card-line); border-radius: var(--radius);
+  transition: opacity .25s var(--ease);
+}
+.period-main { flex: 1; min-width: 0; }
+.period-name { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; flex-wrap: wrap; }
+.period-name b { font-size: 14.5px; }
+.period-tag { font-size: 11px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--card-line); color: var(--ink-faint); white-space: nowrap; }
+.period-tag.live { color: var(--pine); border-color: color-mix(in srgb, var(--pine) 45%, transparent); background: color-mix(in srgb, var(--pine) 8%, transparent); }
+.period-sub { font-size: 12.5px; color: var(--ink-faint); }
+.period-preview {
+  font-family: var(--serif); font-size: 13px; letter-spacing: .5px;
+  color: var(--indigo); background: var(--indigo-soft);
+  padding: 4px 12px; border-radius: 4px; flex: none; white-space: nowrap;
+}
+.period-row.off { opacity: .55; }
+.period-row.off .glyph { opacity: .4; }
+.period-row.off .period-preview { font-family: inherit; font-size: 12px; letter-spacing: 0; color: var(--ink-faint); background: var(--paper-deep); }
+.period-foot { padding: 9px var(--s5); background: var(--paper-deep); font-size: 11.5px; color: var(--ink-faint); border-top: 1px dashed var(--line); }
+/* 规则行（只读） */
+.rule-item { display: flex; align-items: flex-start; gap: var(--s4); padding: var(--s4) var(--s5); border-bottom: 1px dashed var(--line); }
+.rule-item:last-child { border-bottom: none; }
+.rule-item .r-no {
+  font-family: var(--serif); font-size: 13px; font-weight: 700;
+  color: var(--indigo); border: 1px solid color-mix(in srgb, var(--indigo) 45%, transparent);
+  width: 22px; height: 22px; border-radius: 50%;
+  display: grid; place-items: center; flex: none; margin-top: 1px;
+}
+.rule-item .r-main { flex: 1; min-width: 0; }
+.rule-item .r-name { font-size: 13.5px; font-weight: 600; margin-bottom: 2px; }
+.rule-item .r-desc { font-size: 12.5px; color: var(--ink-soft); line-height: 1.6; }
+.rule-item .r-tag { font-size: 11px; color: var(--ink-faint); border: 1px solid var(--card-line); border-radius: 999px; padding: 1px 8px; flex: none; margin-top: 3px; }
+/* 开关 */
+.switch { position: relative; width: 40px; height: 22px; flex: none; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.switch i {
+  position: absolute; inset: 0; border-radius: 999px;
+  background: var(--line-strong); transition: background .2s var(--ease);
+}
+.switch i::after {
+  content: ""; position: absolute; top: 3px; left: 3px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #fff; transition: transform .2s var(--ease);
+  box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+.switch input:checked + i { background: var(--pine); }
+.switch input:checked + i::after { transform: translateX(18px); }
+.switch input:disabled + i { opacity: .45; }
+
+/* ================= 登录 / 注册门 ================= */
+#loginGate {
+  position: fixed; inset: 0; z-index: 200;
+  display: grid; grid-template-columns: 42% 1fr;
+  background: var(--paper);
+  transition: opacity .45s var(--ease), visibility .45s;
+}
+#loginGate.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+.lg-brand {
+  background: var(--ink); color: #efe8d8;
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: space-between;
+  padding: var(--s8) var(--s8) var(--s6);
+}
+.lg-brand::after { content: ""; position: absolute; right: -70px; top: -70px; width: 230px; height: 230px; border: 1px solid rgba(239,232,216,.14); border-radius: 50%; }
+.lg-brand::before { content: ""; position: absolute; right: -30px; bottom: -90px; width: 270px; height: 270px; border: 1px solid rgba(239,232,216,.1); border-radius: 50%; }
+.lg-seal { width: 52px; height: 52px; background: var(--zhu); color: #f7f3ea; font-family: var(--serif); font-size: 26px; font-weight: 900; display: grid; place-items: center; border-radius: 8px; }
+.lg-brand h1 { font-family: var(--serif); font-size: 42px; letter-spacing: 6px; margin: var(--s6) 0 8px; }
+.lg-brand .en { font-size: 12px; letter-spacing: 5px; color: #bfb69e; }
+.lg-slogan {
+  font-family: var(--serif); font-size: 17px; letter-spacing: 4px; color: #d8cfba;
+  writing-mode: vertical-rl; line-height: 2.1;
+  position: absolute; right: var(--s8); top: 50%; transform: translateY(-50%);
+  border-right: 1px solid rgba(239,232,216,.18); padding-right: var(--s4);
+}
+.lg-foot { font-size: 11.5px; color: #8a8371; position: relative; }
+.lg-main { display: grid; place-items: center; padding: var(--s6); overflow-y: auto; }
+.lg-box { width: min(380px, 100%); }
+.lg-box h2 { font-family: var(--serif); font-size: 24px; letter-spacing: 3px; margin-bottom: 4px; }
+.lg-sub { font-size: 12.5px; color: var(--ink-soft); margin-bottom: var(--s5); }
+.lg-tabs { display: flex; gap: var(--s6); border-bottom: 2px solid var(--line); margin-bottom: var(--s5); }
+.lg-tabs button {
+  border: none; background: none; font-family: inherit; cursor: pointer;
+  font-size: 14.5px; letter-spacing: 2px; padding: 10px 2px;
+  color: var(--ink-faint); border-bottom: 2px solid transparent; margin-bottom: -2px;
+  transition: color .16s var(--ease), border-color .16s var(--ease);
+}
+.lg-tabs button.on { color: var(--ink); font-weight: 700; border-bottom-color: var(--zhu); }
+.lg-field { margin-bottom: var(--s4); }
+.lg-field label { display: block; font-size: 12.5px; color: var(--ink-soft); margin-bottom: 6px; }
+.lg-field input, .lg-field select {
+  width: 100%; box-sizing: border-box;
+  border: 1px solid var(--line-strong); border-radius: var(--radius);
+  background: #fff; padding: 10px 12px; font-size: 14px; color: var(--ink);
+  font-family: inherit; outline: none;
+  transition: border-color .16s var(--ease), box-shadow .16s var(--ease);
+}
+.lg-field input:focus, .lg-field select:focus { border-color: var(--zhu); box-shadow: 0 0 0 3px color-mix(in srgb, var(--zhu) 12%, transparent); }
+.lg-field input::placeholder { color: var(--ink-faint); }
+.lg-pass-wrap { position: relative; }
+.lg-pass-wrap input { padding-right: 56px; }
+.lg-eye {
+  position: absolute; right: 7px; top: 50%; transform: translateY(-50%);
+  border: none; background: none; cursor: pointer;
+  width: 30px; height: 30px; display: grid; place-items: center;
+  color: var(--ink-faint); border-radius: 6px;
+  transition: color .14s var(--ease), background .14s var(--ease);
+}
+.lg-eye:hover { color: var(--ink); background: var(--paper-deep); }
+.lg-eye svg { display: block; }
+.lg-eye .eye-off { display: none; }
+.lg-eye.on .eye-on { display: none; }
+.lg-eye.on .eye-off { display: block; }
+.lg-btn {
+  width: 100%; border: none; cursor: pointer; font-family: inherit;
+  background: var(--ink); color: #f3eee2;
+  font-size: 15px; letter-spacing: 6px; padding: 12px; border-radius: var(--radius);
+  margin-top: var(--s2); transition: background .18s var(--ease);
+}
+.lg-btn:hover { background: #3a352b; }
+.lg-alt { display: flex; align-items: center; gap: 12px; margin: var(--s5) 0 var(--s3); color: var(--ink-faint); font-size: 11.5px; }
+.lg-alt::before, .lg-alt::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.lg-hint { font-size: 12px; color: var(--ink-faint); text-align: center; margin-top: 10px; line-height: 1.7; }
+.lg-hint b { color: var(--ink-soft); font-weight: 600; font-family: var(--sans); }
+.lg-demo {
+  width: 100%; cursor: pointer; font-family: inherit;
+  border: 1px solid var(--line-strong); background: transparent;
+  color: var(--ink-soft); font-size: 13px; padding: 10px; border-radius: var(--radius);
+  transition: all .18s var(--ease);
+}
+.lg-demo:hover { border-color: var(--zhu); color: var(--zhu); background: var(--zhu-soft); }
+.lg-note { margin-top: var(--s5); font-size: 11.5px; color: var(--ink-faint); text-align: center; }
+
+/* toast */
+.toast {
+  position: fixed; bottom: 28px; left: 50%; transform: translate(-50%, 16px);
+  background: var(--ink); color: #f3eee2;
+  font-size: 13px; padding: 10px 22px; border-radius: 999px;
+  opacity: 0; pointer-events: none;
+  transition: all .3s var(--ease);
+  z-index: 300;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+
+/* footer note */
+.proto-foot { text-align: center; font-size: 11.5px; color: var(--ink-faint); padding: var(--s6) 0 var(--s4); }
+
+/* ---------- 全局搜索 ---------- */
+.search { position: relative; display: flex; align-items: center; }
+.search svg { position: absolute; left: 11px; width: 15px; height: 15px; color: var(--ink-faint); pointer-events: none; }
+.search input {
+  width: 230px; padding: 7px 12px 7px 33px;
+  border: 1px solid var(--line-strong); border-radius: 999px;
+  background: var(--card); font-size: 13px; color: var(--ink);
+  transition: all .18s var(--ease); outline: none;
+}
+.search input::placeholder { color: var(--ink-faint); }
+.search input:focus { border-color: var(--zhu); width: 280px; box-shadow: 0 0 0 3px var(--zhu-soft); }
+.search-pop {
+  position: absolute; right: 0; top: calc(100% + 8px); width: 400px;
+  background: var(--card); border: 1px solid var(--card-line); border-radius: var(--radius);
+  box-shadow: 0 10px 30px rgba(30,25,15,.16); display: none; z-index: 150; overflow: hidden;
+}
+.search-pop.show { display: block; animation: menuIn .18s var(--ease); }
+.search-group { font-size: 11px; letter-spacing: 2px; color: var(--ink-faint); padding: 9px 14px 5px; border-bottom: 1px dashed var(--line); background: var(--paper-deep); }
+.search-item { display: block; width: 100%; text-align: left; border: none; background: none; padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--line); transition: background .14s var(--ease); }
+.search-item:hover { background: #fffef9; }
+.search-item:last-child { border-bottom: none; }
+.si-title { font-size: 13px; font-weight: 600; color: var(--ink); display: flex; align-items: center; gap: 7px; }
+.si-title .who { color: var(--zhu-deep); }
+.si-ex { font-size: 12px; color: var(--ink-soft); margin-top: 2px; line-height: 1.55; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.search-item mark, .si-ex mark { background: var(--zhu-soft); color: var(--zhu-deep); padding: 0 1px; border-radius: 2px; }
+.search-empty { padding: 26px 14px 28px; text-align: center; font-size: 12.5px; color: var(--ink-faint); line-height: 1.8; }
+.search-kbd { font-size: 10.5px; color: var(--ink-faint); border: 1px solid var(--line-strong); border-radius: 4px; padding: 0 5px; margin-left: auto; }
+
+/* ---------- 归档浏览 ---------- */
+.seg { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 999px; overflow: hidden; }
+.seg button { border: none; background: var(--card); font-size: 12.5px; color: var(--ink-soft); padding: 5px 14px; cursor: pointer; transition: all .16s var(--ease); }
+.seg button + button { border-left: 1px solid var(--line-strong); }
+.seg button.on { background: var(--zhu); color: #fff8ef; font-weight: 600; }
+.month-cap { display: flex; align-items: baseline; gap: 10px; padding: var(--s5) var(--s2) var(--s2); }
+.month-cap b { font-family: var(--serif); font-size: 16px; letter-spacing: 1px; color: var(--ink); }
+.month-cap span { font-size: 12px; color: var(--ink-faint); }
+.month-cap::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+/* ---------- 详情归档翻页 ---------- */
+.detail-pager { display: flex; align-items: center; gap: var(--s4); margin-top: var(--s4); padding-top: var(--s4); border-top: 1px dashed var(--line); }
+.pager-btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line-strong); background: var(--card); font-size: 12.5px; color: var(--ink-soft); padding: 6px 13px; border-radius: 999px; cursor: pointer; transition: all .16s var(--ease); }
+.pager-btn:hover:not(:disabled) { border-color: var(--zhu); color: var(--zhu-deep); background: var(--zhu-soft); }
+.pager-btn:disabled { opacity: .35; cursor: not-allowed; }
+.pager-cur { font-size: 12px; color: var(--ink-faint); letter-spacing: 1px; margin: 0 auto; }
+
+/* ---------- 草稿自动暂存 ---------- */
+.stash-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--ink-faint); }
+.stash-chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--pine); transition: background .2s var(--ease); }
+.stash-chip.editing { color: var(--ochre); }
+.stash-chip.editing::before { background: var(--ochre); animation: stashBlink 1s ease-in-out infinite; }
+@keyframes stashBlink { 50% { opacity: .35; } }
+.stash-warn { display: flex; gap: 10px; align-items: flex-start; background: var(--ochre-soft); border: 1px solid color-mix(in srgb, var(--ochre) 30%, transparent); border-radius: var(--radius); padding: 12px 14px; font-size: 13px; color: var(--ink-soft); line-height: 1.65; margin-bottom: var(--s4); }
+.stash-warn svg { width: 17px; height: 17px; flex: none; color: var(--ochre); margin-top: 2px; }
+.stash-warn b { color: var(--ochre); }
+
+/* responsive */
+@media (max-width: 960px) {
+  .editor-grid, .set-grid { grid-template-columns: 1fr; }
+  .set-nav { display: none; }
+  .set-sec-head .aux { display: none; }
+  #loginGate { grid-template-columns: 1fr; }
+  .lg-brand { display: none; }
+  .review-panel { columns: 1; }
+  .nav { overflow-x: auto; }
+  .topbar { padding: 0 var(--s4); gap: var(--s3); }
+  .stage { padding: var(--s4) var(--s4) 80px; }
+  .row-excerpt { display: none; }
+  .week-big { font-size: 40px; }
+  .search { display: none; }
+  .detail-pager { flex-wrap: wrap; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===================== 登录 / 注册门 ===================== -->
+<div id="loginGate">
+  <aside class="lg-brand">
+    <div>
+      <div class="lg-seal">周</div>
+      <h1>周报工作台</h1>
+      <div class="en">WEEKLY PRESS · 改版评审稿</div>
+    </div>
+    <div class="lg-slogan">以周为单位，把工作写成刊物</div>
+    <div class="lg-foot">编辑部 · 墨韵 v2.0 · 静态演示原型，数据均为虚构</div>
+  </aside>
+  <div class="lg-main">
+    <div class="lg-box">
+      <h2>欢迎回来</h2>
+      <div class="lg-sub">登录后继续撰写与查阅你的周报</div>
+      <div class="lg-tabs">
+        <button class="on" id="tabLogin" onclick="authTab('login')">登 录</button>
+        <button id="tabReg" onclick="authTab('reg')">注 册</button>
+      </div>
+      <form id="authLogin" onsubmit="doLogin(event)">
+        <div class="lg-field"><label>账号</label><input id="lgAccount" value="juren" autocomplete="username"/></div>
+        <div class="lg-field"><label>口令</label>
+          <div class="lg-pass-wrap">
+            <input id="lgPass" type="password" value="demo1234" autocomplete="current-password"/>
+            <button type="button" class="lg-eye" onclick="togglePass('lgPass', this)" aria-label="显示或隐藏口令" title="显示口令">
+              <svg class="eye-on" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="eye-off" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/><path d="m4 4 16 16"/></svg>
+            </button>
+          </div>
+        </div>
+        <button class="lg-btn" type="submit">登 录</button>
+        <div class="lg-hint">演示账号：<b>juren</b> = 管理员 · <b>xuqc</b> = 普通成员（口令任意）</div>
+      </form>
+      <form id="authReg" onsubmit="doRegister(event)" style="display:none;">
+        <div class="lg-field"><label>姓名</label><input id="rgName" placeholder="真实姓名，将作为周报署名"/></div>
+        <div class="lg-field"><label>账号</label><input id="rgAccount" placeholder="登录用账号，字母或工号"/></div>
+        <div class="lg-field"><label>部门</label><select id="rgDept"><option>网管研发部</option><option>平台组</option><option>测试组</option></select></div>
+        <div class="lg-field"><label>初始口令</label>
+          <div class="lg-pass-wrap">
+            <input id="rgPass" type="password" placeholder="至少 6 位"/>
+            <button type="button" class="lg-eye" onclick="togglePass('rgPass', this)" aria-label="显示或隐藏口令" title="显示口令">
+              <svg class="eye-on" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="eye-off" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/><path d="m4 4 16 16"/></svg>
+            </button>
+          </div>
+        </div>
+        <button class="lg-btn" type="submit">注册并进入</button>
+        <div class="lg-hint">新注册成员默认为「普通成员」，管理权限由管理员分配</div>
+      </form>
+      <div class="lg-alt">或</div>
+      <button class="lg-demo" onclick="enterApp()">先逛逛 · 免登录进入演示</button>
+      <div class="lg-note">演示原型 · 任意账号口令均可进入</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== 顶栏 ===================== -->
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-seal">周</div>
+    <div class="brand-name">周报工作台<small>WEEKLY PRESS</small></div>
+  </div>
+  <nav class="nav" id="nav">
+    <button data-view="editor" class="active">写周报</button>
+    <button data-view="mine">我的周报</button>
+    <button data-view="shared">我可查看的<span class="badge-dot"></span></button>
+    <button data-view="detail">周报详情</button>
+    <button data-view="members" data-admin="1">成员管理</button>
+    <button data-view="settings" data-admin="1">平台设置</button>
+  </nav>
+  <div class="search" id="searchBox">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="searchInput" placeholder="搜索周报 · 人名 / 项目 / 周期…" autocomplete="off" oninput="doSearch(this.value)" onfocus="doSearch(this.value)"/>
+    <div class="search-pop" id="searchPop" role="listbox" aria-label="搜索结果"></div>
+  </div>
+  <div class="bell" id="bellEntry" onclick="toggleNoti(event)" role="button" aria-label="通知">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+    <span class="bell-badge num" id="bellBadge">3</span>
+    <div class="noti-pop" id="notiPop" role="dialog" aria-label="通知面板">
+      <div class="noti-head">
+        <b>通知</b>
+        <span class="ncount num" id="notiUnread"></span>
+        <span class="spacer"></span>
+        <button onclick="markAllRead(event)">全部已读</button>
+      </div>
+      <div class="noti-list" id="notiList"></div>
+      <div class="noti-foot">
+        <span>点击通知跳转对应页面 · 通知保留 90 天</span>
+        <button onclick="demoNoti(event)" title="评审演示：模拟收到一条新通知">⚡ 模拟推送</button>
+      </div>
+    </div>
+  </div>
+  <div class="me" id="meEntry" onclick="toggleMeMenu(event)">
+    <span>研发部 · 巨人</span>
+    <div class="avatar">巨</div>
+    <div class="me-menu" id="meMenu" role="menu" aria-label="账户菜单">
+      <div class="mm-head">
+        <b id="mmName">巨人</b>
+        <span id="mmDept">网管研发部</span>
+        <span style="margin-top:2px;"><span class="tag role-admin" id="mmRole">管理员</span></span>
+      </div>
+      <button class="mm-item" onclick="switchRole(event)">⇄ 切换角色演示（管理员 ⇄ 成员）</button>
+      <button class="mm-item" onclick="toast('个人资料（静态演示）')">个人资料</button>
+      <button class="mm-item danger" onclick="logout(event)">退出登录</button>
+    </div>
+  </div>
+</header>
+
+<!-- ===================== 评审导览 ===================== -->
+<div class="review-bar">
+  <strong>评审稿 · v2.0</strong>
+  <span>「编辑部 · 墨韵」 · 点击右侧展开需求对照</span>
+  <span class="spacer"></span>
+  <button id="reviewToggle">展开需求对照表</button>
+</div>
+<div class="review-panel" id="reviewPanel">
+  <ul>
+    <li><b>① 周自动编号</b><span class="tag">写周报</span> 系统按 ISO 周自动生成「2026 年第 47 周」，全公司统一，不可手改编号。</li>
+    <li><b>② 补填 1 年内</b><span class="tag">写周报</span> 「更换周期」限定最早可补填至 2025.11.17，超期禁选。</li>
+    <li><b>③ 多文本框</b><span class="tag">写周报</span> 上周总结 / 本周计划均默认 1 条，可「+ 添加一条」。</li>
+    <li><b>④ 附件 + 纯文本</b><span class="tag">写周报</span> 每条条目均带「添加附件」与附件芯片，不做富文本、无优先级/投入比字段。</li>
+    <li><b>⑤ 上周计划带入</b><span class="tag">写周报</span> 新建时自动弹出带入横幅，可编辑或移除。</li>
+    <li><b>⑥/⑦ 可见范围</b><span class="tag">写周报</span> 自动导入上周设置；可选「全员公开 / 按部门 + 按人员」。</li>
+    <li><b>⑧ 评论删除分级</b><span class="tag">详情</span> 当周评论可直接删除；更早评论仅软删除（页面有对照示例）。</li>
+    <li><b>⑨ 点赞与分享</b><span class="tag">详情 / 列表</span> 任何可查看的他人日志均可点赞、转发。</li>
+    <li><b>⑩ 分享 / 转发分栏</b><span class="tag">我可查看的</span> 「分享给我的」与「转发给我的」两个独立页签。</li>
+    <li><b>⑪ 部门单层</b><span class="tag">成员管理</span> 人员表带「部门」字段，不支持层级；支持 Excel 导入。</li>
+    <li><b>⑫ AI 总结</b><span class="tag">二期</span> 平台设置内预留 MCP / WorkBuddy 接入位，界面标灰预埋。</li>
+    <li><b>⑬ 登录 / 注册</b><span class="tag">全局</span> 打开原型先见登录门：账号口令登录、注册（姓名 / 账号 / 部门 / 口令），或免登录直接体验。</li>
+    <li><b>⑭ 角色与权限</b><span class="tag">全局</span> 管理员 / 普通成员两级角色：导航按角色渲染（成员管理、平台设置仅管理员可见），越权访问拦截提示；成员表可分配 / 收回管理员（不能改自己、至少保留一名），权限矩阵见平台设置③。头像菜单支持「切换角色演示」。</li>
+    <li><b>⑮ 通知系统</b><span class="tag">全局</span> 顶栏新增通知铃铛：未读数徽标 + 下拉面板（评论 / 点赞 / 转发 / 系统通知四类，彩色类型徽标，未读朱砂底 + 红点），点击通知跳转对应页面并自动已读；支持「全部已读」；评论、转发、修改留痕、提交等操作均提示「对方将收到通知」形成闭环；面板底部提供「⚡ 模拟推送」用于评审演示实时到达。通知保留 90 天。</li>
+    <li><b>⑯ 全局搜索与归档</b><span class="tag">全局 / 列表 / 详情</span> 顶栏新增全局搜索：按关键词 / 人名 / 周期实时检索可见范围内全部周报，结果按「我的周报 / 我可查看的」分组并高亮命中词，点击直达对应视图；提供快速检索词。「我的周报」支持平铺 / 按周期归档切换（按月分组，标注篇数）；周报详情新增「上一篇 / 下一篇」归档翻页，条目、评论与操作按钮随报告整体切换。</li>
+    <li><b>⑰ 草稿自动暂存与离开拦截</b><span class="tag">写周报</span> 编辑器输入停顿约 1 秒即静默暂存草稿，周期旁状态芯片实时显示「编辑中 / 已暂存 HH:MM」；存在未暂存修改时切换页面或退出登录会弹出拦截层（留在本页 / 丢弃并离开），丢弃后内容回退到上次暂存版本；关闭浏览器窗口同样拦截（beforeunload）。</li>
+    <li><b>⑱ 变更记录版本化</b><span class="tag">详情 / 列表</span> 每次修改自动生成版本，报告持有完整版本链（v1 初版 → v2 → v3 当前）。弹层顶部可<b>选任意两版对比</b>（下拉选择或点击时间线「起点 / 终点」，支持 ⇄ 交换），diff 由版本数据实时计算而非静态截图；版本历史时间线展示各版时间与内容摘要。「我的周报」与详情页均有入口（详情页 meta 显示「已修改 N 次 · 查看版本」），无版本历史的报告不显示该入口。</li>
+    <li><b>细节</b><span class="tag">全局</span> 报告周期（日/周/月）由配置决定启用；列表支持按人员 + 日期范围过滤；提交后不可删除仅可修改。</li>
+  </ul>
+</div>
+
+<main class="stage">
+
+  <!-- ===================== 视图：写周报 ===================== -->
+  <section class="view active" id="view-editor">
+    <div class="period-hero">
+      <div class="period-tabs">
+        <button class="on" data-period="周报">周报</button>
+        <button data-period="日报">日报</button>
+        <button data-period="月报">月报</button>
+      </div>
+      <div class="week-line">
+        <div class="week-big" id="weekBig">第 <span class="wk num">47</span> 周</div>
+        <div class="week-range" id="weekRange"><b>2026.11.16</b> — <b>2026.11.22</b> · <span id="periodLabel">周报</span></div>
+        <div class="week-actions">
+          <span class="tag auto">自动编号 · 全公司统一</span>
+          <button class="btn sm" onclick="openPeriodModal()">更换周期</button>
+        </div>
+      </div>
+      <div class="week-meta" id="weekMeta">
+        <span class="dot">编号 2026-W47 · 可补填 1 年内</span>
+        <span class="stash-chip" id="stashChip">自动暂存已开启 · 每次停顿 1 秒后保存</span>
+      </div>
+    </div>
+
+    <div class="notice" id="fillNotice">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg>
+      <div id="fillText">新建周报时已从 <b>上周计划</b> 自动带入 <b>2 条</b> 到「上周总结」，可直接编辑或逐条移除。</div>
+    </div>
+
+    <div class="notice edit" id="editNotice" style="display:none">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+      <div>正在修改：<b id="editTarget"></b> · 保存后将自动生成变更记录，修改内容对可见范围内的人可见</div>
+      <button class="btn sm" onclick="exitEditMode(true)">取消修改</button>
+    </div>
+
+    <div>
+        <!-- 上周总结 -->
+        <div class="divider-label">
+          <h2 id="summaryTitle">上周总结</h2>
+          <span class="note" id="summaryNote">纯文本 · 每条可附附件 · 无需富文本</span>
+        </div>
+        <div id="summaryBlocks">
+          <div class="block-card">
+            <div class="block-head">
+              <span class="block-no num">1</span>
+              <span style="font-size:12px;color:var(--ink-faint)">来自上周计划的自动带入</span>
+              <span style="flex:1"></span>
+              <button class="block-del" onclick="removeBlock(this)">移除</button>
+            </div>
+            <textarea placeholder="这一条做了什么、结果如何……">完成 CPE-OTN 网管 NETCONF 告警同步模块联调，修复 3 个 Redmine 缺陷并回归通过。</textarea>
+            <div class="block-foot">
+              <button class="attach-btn" onclick="addAttach(this)">＋ 添加附件</button>
+              <span class="attach-chip">📎 alarm-sync-test.xlsx <span class="size">284 KB</span></span>
+              <span class="flex"></span>
+            </div>
+          </div>
+          <div class="block-card">
+            <div class="block-head">
+              <span class="block-no num">2</span>
+              <span style="flex:1"></span>
+              <button class="block-del" onclick="removeBlock(this)">移除</button>
+            </div>
+            <textarea placeholder="这一条做了什么、结果如何……">输出 bug-fetcher 技能与 Redmine 打通方案初稿，待评审。</textarea>
+            <div class="block-foot">
+              <button class="attach-btn" onclick="addAttach(this)">＋ 添加附件</button>
+              <span class="flex"></span>
+            </div>
+          </div>
+        </div>
+        <button class="add-block" id="addSummary" onclick="addBlock('summaryBlocks')">＋ 添加一条总结</button>
+
+        <!-- 本周计划 -->
+        <div class="divider-label">
+          <h2 id="planTitle">本周计划</h2>
+          <span class="note" id="planNote">将自动带入下周的「上周总结」</span>
+        </div>
+        <div id="planBlocks">
+          <div class="block-card">
+            <div class="block-head">
+              <span class="block-no num">1</span>
+              <span style="flex:1"></span>
+              <button class="block-del" onclick="removeBlock(this)">移除</button>
+            </div>
+            <textarea placeholder="这一条打算做什么、目标是什么……">推进 FSL8147 网监软件性能压测，目标 P95 响应 &lt; 800ms。</textarea>
+            <div class="block-foot">
+              <button class="attach-btn" onclick="addAttach(this)">＋ 添加附件</button>
+              <span class="flex"></span>
+            </div>
+          </div>
+        </div>
+        <button class="add-block" id="addPlan" onclick="addBlock('planBlocks')">＋ 添加一条计划</button>
+
+        <!-- 谁能看到这篇报告 -->
+        <div class="divider-label">
+          <h2>谁能看到这篇报告</h2>
+          <span class="tag auto">已导入上期设置</span>
+        </div>
+        <div class="block-card">
+          <div class="vis-row">
+            <label class="radio-row"><input type="radio" name="vis" checked onchange="visToggle(false)"/> 全员公开 <span class="sub">公司内所有人可见</span></label>
+            <label class="radio-row"><input type="radio" name="vis" onchange="visToggle(true)"/> 自定义范围 <span class="sub">按部门 + 按人员</span></label>
+          </div>
+          <div class="custom-box" id="customVis">
+            <div class="vis-cols">
+              <div>
+                <div style="font-size:12px;color:var(--ink-faint);margin-bottom:4px;">按部门（不支持层级）</div>
+                <div class="chip-row" id="visDeptRow">
+                  <span class="chip dept" data-name="研发部">研发部 <i class="x">✕</i></span>
+                  <span class="chip dept" data-name="产品部">产品部 <i class="x">✕</i></span>
+                  <span class="chip add-chip" onclick="openPickPop('dept', this)">＋ 部门</span>
+                </div>
+              </div>
+              <div>
+                <div style="font-size:12px;color:var(--ink-faint);margin-bottom:4px;">按人员</div>
+                <div class="chip-row" id="visPersonRow">
+                  <span class="chip" data-name="许清楚">许清楚 <i class="x">✕</i></span>
+                  <span class="chip" data-name="陈一舟">陈一舟 <i class="x">✕</i></span>
+                  <span class="chip" data-name="林晚">林晚 <i class="x">✕</i></span>
+                  <span class="chip add-chip" onclick="openPickPop('person', this)">＋ 人员</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="import-note" style="margin-bottom:0;">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+            <span>已自动导入上期设置，可自行调整。</span>
+          </div>
+        </div>
+
+        <div class="submit-zone" style="margin-top: var(--s6);">
+          <button class="btn" id="btnDraft" onclick="toast('已保存为草稿（仅本人可见）')">保存草稿</button>
+          <button class="btn primary" id="btnSubmit" onclick="submitReport()">提交报告</button>
+          <div class="hint">
+            提交后<b>不可删除</b>，仅可修改；<br/>每次修改自动生成变更记录。
+          </div>
+        </div>
+    </div>
+  </section>
+
+  <!-- ===================== 视图：我的周报 ===================== -->
+  <section class="view" id="view-mine">
+    <div class="page-head">
+      <h1 class="page-title">我的周报</h1>
+      <span class="page-sub">提交后仅可修改 · 修改自动留痕</span>
+    </div>
+    <div class="filter-bar">
+      <label>日期范围</label>
+      <input type="date" value="2026-10-01"/>
+      <span style="color:var(--ink-faint)">至</span>
+      <input type="date" value="2026-11-17"/>
+      <span class="flex"></span>
+      <div class="seg" id="archiveSeg" role="group" aria-label="列表形态">
+        <button class="on" onclick="archiveToggle(this, false)">平铺</button>
+        <button onclick="archiveToggle(this, true)">按周期归档</button>
+      </div>
+      <button class="btn sm" onclick="openAiModal('mine')">✦ AI 总结</button>
+      <button class="btn sm" onclick="toast('跳转写周报（静态演示）')">＋ 写本周周报</button>
+    </div>
+    <div class="report-list" id="mineList">
+      <div class="row-card" data-month="2026-11">
+        <div class="row-main">
+          <div class="row-title"><span class="when">2026 年第 47 周</span><span class="tag draft">草稿</span><span class="tag auto">补填</span></div>
+          <div class="row-excerpt">完成 CPE-OTN 网管 NETCONF 告警同步模块联调 · 推进 FSL8147 压测计划…</div>
+        </div>
+        <div class="row-stats"><span class="stat">3 条</span><span class="stat">📎 1</span><span class="stat num">👍 0</span></div>
+        <div class="row-ops">
+          <button class="btn sm" onclick="goto('editor')">继续编辑</button>
+          <button class="btn sm danger-ghost" onclick="toast('草稿可删除（静态演示）')">删除</button>
+        </div>
+      </div>
+      <div class="row-card" data-month="2026-11">
+        <div class="row-main">
+          <div class="row-title"><span class="when">2026 年第 46 周</span><span class="tag submitted">已提交</span></div>
+          <div class="row-excerpt">修复 Phase2 项目 5 个缺陷，完成 bug-fetcher 技能端到端验证…</div>
+        </div>
+        <div class="row-stats"><span class="stat">2 条</span><span class="stat num">👍 12</span><span class="stat num">💬 4</span></div>
+        <div class="row-ops">
+          <button class="btn sm" onclick="goto('detail')">查看</button>
+          <button class="btn sm" onclick='enterEditMode("2026 年第 46 周 · 周报",{big:"第 <span class=\"wk num\">46</span> 周",range:"<b>2026.11.09</b> — <b>2026.11.15</b> · <span id=\"periodLabel\">周报</span>",meta:"<span class=\"dot\">编号 2026-W46 · 提交于 2026.11.16 · 修改留痕</span>",summary:[{text:"完成 CPE-OTN 网管 NETCONF 告警同步模块联调"},{text:"修复 Phase2 项目 5 个缺陷，完成 bug-fetcher 技能端到端验证"}],plan:[{text:"启动 FSL8147 压测环境搭建"}]})'>修改</button>
+        </div>
+      </div>
+      <div class="row-card" data-month="2026-11">
+        <div class="row-main">
+          <div class="row-title"><span class="when">2026 年第 46 周</span><span class="tag submitted">已提交</span><span class="tag edited">已修改</span></div>
+          <div class="row-excerpt">修复 Phase2 项目 5 个缺陷，完成 bug-fetcher 技能端到端验证；新增：整理 NETCONF 网管回归测试清单…</div>
+          <div class="row-change">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            <span>共 3 个版本 · 最近变更于 2026.11.18 09:15 · 点击「变更记录」可对比任意两版</span>
+          </div>
+        </div>
+        <div class="row-stats"><span class="stat">3 条</span><span class="stat">📎 2</span><span class="stat num">👍 12</span><span class="stat num">💬 4</span></div>
+        <div class="row-ops">
+          <button class="btn sm" onclick="goto('detail')">查看</button>
+          <button class="btn sm" onclick="openDiffModal(46)">变更记录</button>
+          <button class="btn sm" onclick='enterEditMode("2026 年第 46 周 · 周报（变更后）",{big:"第 <span class=\"wk num\">46</span> 周",range:"<b>2026.11.09</b> — <b>2026.11.15</b> · <span id=\"periodLabel\">周报</span>",meta:"<span class=\"dot\">编号 2026-W46 · 提交于 2026.11.16 · 修改留痕</span>",summary:[{text:"完成 CPE-OTN 网管 NETCONF 告警同步模块联调"},{text:"修复 Phase2 项目 5 个缺陷，完成 bug-fetcher 技能端到端验证"},{text:"整理 NETCONF 网管回归测试清单"}],plan:[{text:"启动 FSL8147 压测环境搭建（提前申请 2 台测试机）"}]})'>修改</button>
+        </div>
+      </div>
+      <div class="row-card" data-month="2026-11">
+        <div class="row-main">
+          <div class="row-title"><span class="when">2026 年第 45 周</span><span class="tag submitted">已提交</span></div>
+          <div class="row-excerpt">OTN 告警性能优化专项，P95 查询耗时从 2.1s 降至 760ms…</div>
+        </div>
+        <div class="row-stats"><span class="stat">2 条</span><span class="stat num">👍 8</span><span class="stat num">💬 2</span></div>
+        <div class="row-ops">
+          <button class="btn sm" onclick="goto('detail')">查看</button>
+          <button class="btn sm" onclick='enterEditMode("2026 年第 45 周 · 周报",{big:"第 <span class=\"wk num\">45</span> 周",range:"<b>2026.11.02</b> — <b>2026.11.08</b> · <span id=\"periodLabel\">周报</span>",meta:"<span class=\"dot\">编号 2026-W45 · 提交于 2026.11.09 · 修改留痕</span>",summary:[{text:"OTN 告警性能优化专项，P95 查询耗时从 2.1s 降至 760ms"},{text:"完成 FSL8147 一轮回归测试，遗留 2 个非阻塞缺陷"}],plan:[{text:"输出告警优化方案复盘文档，同步交付部"}]})'>修改</button>
+        </div>
+      </div>
+      <div class="row-card" data-month="2026-10">
+        <div class="row-main">
+          <div class="row-title"><span class="when">2026 年第 41 周</span><span class="tag submitted">已提交</span></div>
+          <div class="row-excerpt">FSL8147 网监软件需求澄清，输出网监侧告警字段映射表…</div>
+        </div>
+        <div class="row-stats"><span class="stat">2 条</span><span class="stat num">👍 5</span><span class="stat num">💬 1</span></div>
+        <div class="row-ops">
+          <button class="btn sm" onclick="goto('detail')">查看</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 视图：分享给我的 / 转发给我的 ===================== -->
+  <section class="view" id="view-shared">
+    <div class="page-head">
+      <h1 class="page-title">我可查看的日志</h1>
+      <span class="page-sub">他人日志均可点赞与转发</span>
+    </div>
+    <div class="src-tabs">
+      <button class="on" id="tabShared" onclick="srcTab('shared')">分享给我的 <span class="count num">5</span></button>
+      <button id="tabForward" onclick="srcTab('forward')">转发给我的 <span class="count num">2</span></button>
+    </div>
+    <div class="filter-bar">
+      <label>人员</label>
+      <select><option>全部</option><option>许清楚（产品部）</option><option>陈一舟（研发部）</option></select>
+      <label>日期范围</label>
+      <input type="date" value="2026-11-01"/>
+      <span style="color:var(--ink-faint)">至</span>
+      <input type="date" value="2026-11-17"/>
+      <span class="flex"></span>
+      <button class="btn sm" onclick="openAiModal()">
+        ✦ AI 总结
+      </button>
+    </div>
+
+    <div class="report-list" id="listShared">
+      <div class="row-card">
+        <div class="avatar" style="background:var(--indigo)">许</div>
+        <div class="row-main">
+          <div class="row-title">
+            <span class="who">许清楚</span><span class="tag dept">产品部</span>
+            <span class="when">2026 年第 47 周 · 周报</span>
+          </div>
+          <div class="row-excerpt">完成 Phase2 需求评审纪要沉淀，输出 12 月排期初稿…</div>
+        </div>
+        <div class="row-stats">
+          <button class="like-btn liked" onclick="likeToggle(this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21C7 16.5 3 13.3 3 9.3 3 6.5 5.2 4.5 7.8 4.5c1.7 0 3.2.9 4.2 2.3 1-1.4 2.5-2.3 4.2-2.3 2.6 0 4.8 2 4.8 4.8 0 4-4 7.2-9 11.7z"/></svg><span class="num">6</span></button>
+          <span class="stat num">💬 3</span>
+          <span class="tag auto">变更 · 今天 09:12</span>
+        </div>
+        <div class="row-ops">
+          <button class="btn sm" onclick="goto('detail')">查看</button>
+          <button class="btn sm ghost" onclick="openForwardModal('许清楚 · 2026 年第 47 周 · 周报', '完成 Phase2 需求评审纪要沉淀，输出 12 月排期初稿…', '许', 'var(--indigo)')">转发</button>
+        </div>
+      </div>
+      <div class="row-card">
+        <div class="avatar" style="background:var(--ochre)">陈</div>
+        <div class="row-main">
+          <div class="row-title">
+            <span class="who">陈一舟</span><span class="tag dept">研发部</span>
+            <span class="when">2026 年第 47 周 · 周报</span>
+          </div>
+          <div class="row-excerpt">NETCONF 网管子模块联调，修复事务超时问题…</div>
+        </div>
+        <div class="row-stats">
+          <button class="like-btn" onclick="likeToggle(this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21C7 16.5 3 13.3 3 9.3 3 6.5 5.2 4.5 7.8 4.5c1.7 0 3.2.9 4.2 2.3 1-1.4 2.5-2.3 4.2-2.3 2.6 0 4.8 2 4.8 4.8 0 4-4 7.2-9 11.7z"/></svg><span class="num">2</span></button>
+          <span class="stat num">💬 0</span>
+        </div>
+        <div class="row-ops">
+          <button class="btn sm" onclick="goto('detail')">查看</button>
+          <button class="btn sm ghost" onclick="openForwardModal('陈一舟 · 2026 年第 47 周 · 周报', 'NETCONF 网管子模块联调，修复事务超时问题…', '陈', 'var(--ochre)')">转发</button>
+        </div>
+      </div>
+      <div class="row-card">
+        <div class="avatar" style="background:var(--pine)">林</div>
+        <div class="row-main">
+          <div class="row-title">
+            <span class="who">林晚</span><span class="tag dept">交付部</span>
+            <span class="when">2026 年 11 月 · 月报</span>
+          </div>
+          <div class="row-excerpt">本月完成 3 个站点交付，客户验收一次通过率 100%…</div>
+        </div>
+        <div class="row-stats">
+          <button class="like-btn" onclick="likeToggle(this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21C7 16.5 3 13.3 3 9.3 3 6.5 5.2 4.5 7.8 4.5c1.7 0 3.2.9 4.2 2.3 1-1.4 2.5-2.3 4.2-2.3 2.6 0 4.8 2 4.8 4.8 0 4-4 7.2-9 11.7z"/></svg><span class="num">9</span></button>
+          <span class="stat num">💬 5</span>
+        </div>
+        <div class="row-ops">
+          <button class="btn sm" onclick="goto('detail')">查看</button>
+          <button class="btn sm ghost" onclick="openForwardModal('林晚 · 2026 年 11 月 · 月报', '本月完成 3 个站点交付，客户验收一次通过率 100%…', '林', 'var(--pine)')">转发</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="report-list" id="listForward" style="display:none">
+      <div class="row-card">
+        <div class="avatar" style="background:var(--pine)">林</div>
+        <div class="row-main">
+          <div class="row-title">
+            <span class="who">林晚</span><span class="tag dept">交付部</span>
+            <span class="when">2026 年第 45 周 · 周报</span>
+          </div>
+          <div class="forward-from">↻ 由 <b>许清楚</b> 转发给你 · 附言：「这个站点交付节奏可以参考」</div>
+          <div class="row-excerpt">苏州站点割接完成，零故障回退，输出割接手册 v2…</div>
+        </div>
+        <div class="row-stats">
+          <button class="like-btn liked" onclick="likeToggle(this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21C7 16.5 3 13.3 3 9.3 3 6.5 5.2 4.5 7.8 4.5c1.7 0 3.2.9 4.2 2.3 1-1.4 2.5-2.3 4.2-2.3 2.6 0 4.8 2 4.8 4.8 0 4-4 7.2-9 11.7z"/></svg><span class="num">14</span></button>
+          <span class="stat num">💬 6</span>
+        </div>
+        <div class="row-ops">
+          <button class="btn sm" onclick="goto('detail')">查看</button>
+          <button class="btn sm ghost" onclick="openForwardModal('林晚 · 2026 年第 45 周 · 周报', '苏州站点割接完成，零故障回退，输出割接手册 v2…', '林', 'var(--pine)')">再转发</button>
+        </div>
+      </div>
+      <div class="row-card">
+        <div class="avatar" style="background:var(--indigo)">许</div>
+        <div class="row-main">
+          <div class="row-title">
+            <span class="who">许清楚</span><span class="tag dept">产品部</span>
+            <span class="when">2026 年第 44 周 · 周报</span>
+          </div>
+          <div class="forward-from">↻ 由 <b>陈一舟</b> 转发给你 · 附言：「需求变更原因看这篇」</div>
+          <div class="row-excerpt">Phase2 需求基线变更说明，冻结 v2.3 范围…</div>
+        </div>
+        <div class="row-stats">
+          <button class="like-btn" onclick="likeToggle(this)"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21C7 16.5 3 13.3 3 9.3 3 6.5 5.2 4.5 7.8 4.5c1.7 0 3.2.9 4.2 2.3 1-1.4 2.5-2.3 4.2-2.3 2.6 0 4.8 2 4.8 4.8 0 4-4 7.2-9 11.7z"/></svg><span class="num">3</span></button>
+          <span class="stat num">💬 1</span>
+        </div>
+        <div class="row-ops">
+          <button class="btn sm" onclick="goto('detail')">查看</button>
+          <button class="btn sm ghost" onclick="openForwardModal('许清楚 · 2026 年第 44 周 · 周报', 'Phase2 需求基线变更说明，冻结 v2.3 范围…', '许', 'var(--indigo)')">再转发</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 视图：周报详情 ===================== -->
+  <section class="view" id="view-detail">
+    <div class="detail-wrap">
+      <div class="detail-head">
+        <div class="week-cn">第 <em class="num">46</em> 周 · 周报</div>
+        <div style="font-family:var(--serif);color:var(--ink-soft);font-size:14px;margin-top:4px;" id="detailDate">2026.11.09 — 11.15</div>
+        <div class="detail-meta" id="detailMeta">
+          <span class="avatar" style="width:24px;height:24px;font-size:11px">巨</span>
+          <b>巨人</b><span class="tag dept">研发部</span>
+          <span>提交于 11.16 09:41</span>
+          <span class="tag submitted">已提交</span>
+        </div>
+        <div class="detail-actions" id="detailActions">
+          <button class="btn sm" onclick="toast('已点赞（静态演示）')">👍 点赞 12</button>
+          <button class="btn sm" onclick="openForwardModal('巨人 · 2026 年第 46 周 · 周报', '修复 Phase2 项目 5 个缺陷，完成 bug-fetcher 技能端到端验证…', '巨', 'var(--zhu)')">↻ 转发</button>
+          <button class="btn sm" onclick='enterEditMode("2026 年第 46 周 · 周报",{big:"第 <span class=\"wk num\">46</span> 周",range:"<b>2026.11.09</b> — <b>2026.11.15</b> · <span id=\"periodLabel\">周报</span>",meta:"<span class=\"dot\">编号 2026-W46 · 提交于 2026.11.16 · 修改留痕</span>",summary:[{text:"完成 CPE-OTN 网管 NETCONF 告警同步模块联调"},{text:"修复 Phase2 项目 5 个缺陷，完成 bug-fetcher 技能端到端验证"},{text:"整理 NETCONF 网管回归测试清单"}],plan:[{text:"启动 FSL8147 压测环境搭建（提前申请 2 台测试机）"}]})'>✎ 修改</button>
+          <span style="font-size:11.5px;color:var(--ink-faint);align-self:center;">提交后不可删除</span>
+        </div>
+        <div class="detail-pager">
+          <button class="pager-btn" id="pagerPrev" onclick="pagerGo(-1)">← 上一篇</button>
+          <span class="pager-cur num" id="pagerCur">2026-W46 · 第 2 / 3 篇</span>
+          <button class="pager-btn" id="pagerNext" onclick="pagerGo(1)">下一篇 →</button>
+        </div>
+      </div>
+
+      <div class="detail-section" id="secSummary">
+        <h2>上周总结<span class="mark">2 条 · 附件 1</span></h2>
+        <div class="entry">
+          <div class="entry-meta"><span class="block-no num" style="width:18px;height:18px;font-size:11px">1</span><span>条目一</span></div>
+          <p>完成 CPE-OTN 网管 NETCONF 告警同步模块联调，修复 3 个 Redmine 缺陷并回归通过。其中告警去重策略按网监软件侧意见调整了两版，最终采用窗口聚合方案。</p>
+          <div class="entry-attach">
+            <span class="attach-chip">📎 alarm-sync-test.xlsx <span class="size">284 KB</span></span>
+          </div>
+        </div>
+        <div class="entry">
+          <div class="entry-meta"><span class="block-no num" style="width:18px;height:18px;font-size:11px">2</span><span>条目二</span></div>
+          <p>输出 bug-fetcher 技能与 Redmine 打通方案初稿，待评审。</p>
+        </div>
+      </div>
+
+      <div class="detail-section" id="secPlan">
+        <h2>本周计划<span class="mark">1 条</span></h2>
+        <div class="entry">
+          <p>推进 FSL8147 网监软件性能压测，目标 P95 响应 &lt; 800ms；同步启动 issue-analyzer 技能设计。</p>
+        </div>
+      </div>
+
+      <div class="detail-section" id="secComments">
+        <h2>评论<span class="mark">3 条 · 按时间倒序</span></h2>
+
+        <div class="comment-list" id="detailCommentList">
+        <div class="comment-item">
+          <div class="avatar" style="background:var(--indigo)">许</div>
+          <div class="comment-body">
+            <div class="comment-head"><span class="name">许清楚</span><span class="tag dept">产品部</span><span class="time">昨天 14:22 · 当周评论</span></div>
+            <div class="comment-text">窗口聚合方案确认没问题，网监侧这周会同步灰度。</div>
+          </div>
+          <div class="comment-ops">
+            <button class="btn sm danger-ghost" onclick="toast('当周评论：直接删除，彻底移除（静态演示）')">删除</button>
+          </div>
+        </div>
+
+        <div class="deleted-comment">
+          <span>🗑 该评论由 陈一舟 于 11.13 删除</span>
+          <span class="tag soft">软删除 · 11.12 发表</span>
+          <span style="flex:1"></span>
+          <span style="font-size:11px">超过当周的评论仅可软删除，数据保留备查</span>
+        </div>
+
+        <div class="comment-item">
+          <div class="avatar" style="background:var(--pine)">林晚</div>
+          <div class="comment-body">
+            <div class="comment-head"><span class="name">林晚</span><span class="tag dept">交付部</span><span class="time">11.10 10:05 · 超过当周</span></div>
+            <div class="comment-text">割接手册的告警回切章节可以复用你这篇的结论。</div>
+          </div>
+          <div class="comment-ops">
+            <button class="btn sm danger-ghost" onclick="toast('上周之前的评论：仅软删除（静态演示）')">软删除</button>
+          </div>
+        </div>
+
+        </div>
+
+        <div class="comment-input">
+          <textarea id="commentText" placeholder="写下你的评论（纯文本，支持 1000 字）……"></textarea>
+          <button class="btn primary" style="align-self:flex-end" onclick="publishComment()">发布</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 视图：成员管理 ===================== -->
+  <section class="view" id="view-members" data-admin="1">
+    <div class="page-head">
+      <h1 class="page-title">成员管理</h1>
+      <span class="page-sub">部门为单层结构 · 支持 Excel 导入</span>
+    </div>
+    <div class="filter-bar">
+      <input type="text" placeholder="搜索姓名 / 账号…" style="width:220px" oninput="filterMembers(this.value)"/>
+      <label>部门</label>
+      <select id="deptFilter" onchange="filterMembers()"><option>全部部门</option><option>研发部</option><option>产品部</option><option>交付部</option><option>市场部</option></select>
+      <span class="flex"></span>
+      <button class="btn sm" onclick="toast('已下载 member-template.xlsx（姓名 / 账号 / 部门 / 初始口令）')">⬇ 下载 Excel 模板</button>
+      <button class="btn sm primary" onclick="openImportModal()">导入 Excel</button>
+      <button class="btn sm" onclick="openMemberModal('add')">＋ 新增成员</button>
+    </div>
+    <div class="table-card">
+      <table class="member">
+        <thead><tr><th>姓名</th><th>账号</th><th>部门</th><th>角色</th><th>状态</th><th>最后登录</th><th style="width:250px">操作</th></tr></thead>
+        <tbody id="memberBody">
+          <tr data-name="巨人" data-account="juren" data-dept="研发部" data-role="admin" data-self="1"><td><b>巨人</b></td><td class="num">juren</td><td><span class="tag dept">研发部</span></td><td class="role-cell"><span class="tag role-admin">管理员</span></td><td class="st-cell"><span class="st-on">启用</span></td><td class="num">今天 09:02</td><td><button class="btn sm ghost" onclick="openMemberModal('edit', this)">编辑</button> <button class="btn sm ghost" onclick="openResetModal(this)">重置口令</button> <button class="btn sm ghost" onclick="toggleMember(this)">停用</button> <button class="btn sm ghost" onclick="toggleRole(this)">收回管理员</button></td></tr>
+          <tr data-name="许清楚" data-account="xuqc" data-dept="产品部" data-role="member"><td><b>许清楚</b></td><td class="num">xuqc</td><td><span class="tag dept">产品部</span></td><td class="role-cell"><span class="tag role-member">普通成员</span></td><td class="st-cell"><span class="st-on">启用</span></td><td class="num">昨天 18:44</td><td><button class="btn sm ghost" onclick="openMemberModal('edit', this)">编辑</button> <button class="btn sm ghost" onclick="openResetModal(this)">重置口令</button> <button class="btn sm ghost" onclick="toggleMember(this)">停用</button> <button class="btn sm ghost" onclick="toggleRole(this)">设为管理员</button></td></tr>
+          <tr data-name="陈一舟" data-account="chenyz" data-dept="研发部" data-role="member"><td><b>陈一舟</b></td><td class="num">chenyz</td><td><span class="tag dept">研发部</span></td><td class="role-cell"><span class="tag role-member">普通成员</span></td><td class="st-cell"><span class="st-on">启用</span></td><td class="num">今天 08:31</td><td><button class="btn sm ghost" onclick="openMemberModal('edit', this)">编辑</button> <button class="btn sm ghost" onclick="openResetModal(this)">重置口令</button> <button class="btn sm ghost" onclick="toggleMember(this)">停用</button> <button class="btn sm ghost" onclick="toggleRole(this)">设为管理员</button></td></tr>
+          <tr data-name="林晚" data-account="linwan" data-dept="交付部" data-role="admin"><td><b>林晚</b></td><td class="num">linwan</td><td><span class="tag dept">交付部</span></td><td class="role-cell"><span class="tag role-admin">管理员</span></td><td class="st-cell"><span class="st-on">启用</span></td><td class="num">11.14 16:20</td><td><button class="btn sm ghost" onclick="openMemberModal('edit', this)">编辑</button> <button class="btn sm ghost" onclick="openResetModal(this)">重置口令</button> <button class="btn sm ghost" onclick="toggleMember(this)">停用</button> <button class="btn sm ghost" onclick="toggleRole(this)">收回管理员</button></td></tr>
+          <tr data-name="吴启明" data-account="wuqm" data-dept="市场部" data-role="member" class="mem-off"><td><b>吴启明</b></td><td class="num">wuqm</td><td><span class="tag dept">市场部</span></td><td class="role-cell"><span class="tag role-member">普通成员</span></td><td class="st-cell"><span class="st-off">停用</span></td><td class="num">2026.09.30</td><td><button class="btn sm ghost" onclick="toggleMember(this)">启用</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===================== 视图：平台设置 ===================== -->
+  <section class="view" id="view-settings" data-admin="1">
+    <div class="page-head">
+      <h1 class="page-title">平台设置</h1>
+      <span class="page-sub">管理员可用 · 修改即时生效并通知全员</span>
+    </div>
+    <div class="set-grid">
+      <nav class="set-nav" aria-label="设置目录">
+        <span class="nav-cap">目录</span>
+        <a href="#set-period" class="on" onclick="setNav(this);return false;">① 报告周期</a>
+        <a href="#set-rules" onclick="setNav(this);return false;">② 填报规则</a>
+        <a href="#set-roles" onclick="setNav(this);return false;">③ 角色与权限</a>
+      </nav>
+
+      <div>
+        <div class="set-sec" id="set-period">
+          <div class="set-sec-head">
+            <span class="no">壹</span><h2>报告周期</h2><span class="tail"></span>
+            <span class="aux">关闭的周期在「写周报」中不可选</span>
+          </div>
+          <div class="desc">决定平台启用哪些报告周期，编号规则随周期类型自动生成，全员统一。</div>
+          <div class="set-card">
+            <div class="period-row" id="prWeek">
+              <span class="glyph">周</span>
+              <div class="period-main">
+                <div class="period-name"><b>周报</b><span class="period-tag live">启用中</span><span class="period-tag">默认周期</span></div>
+                <div class="period-sub">全公司统一按 ISO 周编号，周一为一周之始</div>
+              </div>
+              <span class="period-preview" id="ppWeek">2026-W47</span>
+              <label class="switch"><input type="checkbox" checked onchange="togglePeriod(this,'week')"/><i></i></label>
+            </div>
+            <div class="period-row off" id="prDay">
+              <span class="glyph">日</span>
+              <div class="period-main">
+                <div class="period-name"><b>日报</b><span class="period-tag live">已停用</span></div>
+                <div class="period-sub">启用后按自然日编号</div>
+              </div>
+              <span class="period-preview" id="ppDay">未启用</span>
+              <label class="switch"><input type="checkbox" onchange="togglePeriod(this,'day')"/><i></i></label>
+            </div>
+            <div class="period-row off" id="prMonth">
+              <span class="glyph">月</span>
+              <div class="period-main">
+                <div class="period-name"><b>月报</b><span class="period-tag live">已停用</span></div>
+                <div class="period-sub">启用后按自然月编号</div>
+              </div>
+              <span class="period-preview" id="ppMonth">未启用</span>
+              <label class="switch"><input type="checkbox" onchange="togglePeriod(this,'month')"/><i></i></label>
+            </div>
+            <div class="period-foot">停用周期不影响已提交的报告，历史数据完整保留，可随时重新启用。</div>
+          </div>
+        </div>
+
+        <div class="set-sec" id="set-rules">
+          <div class="set-sec-head">
+            <span class="no">贰</span><h2>填报规则</h2><span class="tail"></span>
+            <span class="aux">平台预置 · 不可关闭</span>
+          </div>
+          <div class="desc">以下规则由平台统一预置，对所有成员生效，保证报告可追溯、可审计。</div>
+          <div class="set-card">
+            <div class="rule-item">
+              <span class="r-no">1</span>
+              <div class="r-main">
+                <div class="r-name">补填窗口 · 1 年内</div>
+                <div class="r-desc">最早可补填至一年前的报告，编号按所选周期自动生成，逾期自动归档、不可再填。</div>
+              </div>
+              <span class="r-tag">预置</span>
+            </div>
+            <div class="rule-item">
+              <span class="r-no">2</span>
+              <div class="r-main">
+                <div class="r-name">提交后可修改 · 留痕存档</div>
+                <div class="r-desc">报告提交后仍可修改，每次修改自动生成变更记录，前后版本可对比查看。</div>
+              </div>
+              <span class="r-tag">预置</span>
+            </div>
+            <div class="rule-item">
+              <span class="r-no">3</span>
+              <div class="r-main">
+                <div class="r-name">计划自动带入</div>
+                <div class="r-desc">新建周报时自动把上周「本周计划」带入「上周总结」，可编辑或逐条移除。</div>
+              </div>
+              <span class="r-tag">预置</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="set-sec" id="set-roles">
+          <div class="set-sec-head">
+            <span class="no">叁</span><h2>角色与权限</h2><span class="tail"></span>
+            <span class="aux">两级角色 · 权限即时生效</span>
+          </div>
+          <div class="desc">平台采用「管理员 / 普通成员」两级角色。普通成员聚焦写与看；管理员额外承担成员与平台治理。导航与页面按角色自动渲染，越权访问一律拦截。</div>
+          <div class="set-card">
+            <div class="table-card" style="box-shadow:none;border:none;">
+              <table class="member">
+                <thead><tr><th>能力</th><th style="width:110px">普通成员</th><th style="width:110px">管理员</th><th>说明</th></tr></thead>
+                <tbody>
+                  <tr><td>撰写 / 修改 / 补填自己的报告</td><td><span class="st-on">允许</span></td><td><span class="st-on">允许</span></td><td>提交后不可删除，修改自动留痕</td></tr>
+                  <tr><td>评论 / 点赞 / 转发可见范围内的报告</td><td><span class="st-on">允许</span></td><td><span class="st-on">允许</span></td><td>权限始终受原作者可见范围约束</td></tr>
+                  <tr><td>自定义报告可见范围</td><td><span class="st-on">允许</span></td><td><span class="st-on">允许</span></td><td>按部门 + 按人员，自动继承上期设置</td></tr>
+                  <tr><td>成员管理（新增 / 导入 / 重置口令 / 停用）</td><td><span class="st-off">—</span></td><td><span class="st-on">允许</span></td><td>敏感操作留审计日志（规划中）</td></tr>
+                  <tr><td>分配 / 收回管理员角色</td><td><span class="st-off">—</span></td><td><span class="st-on">允许</span></td><td>不能修改自己的角色；至少保留一名管理员</td></tr>
+                  <tr><td>平台设置（报告周期 / 填报规则）</td><td><span class="st-off">—</span></td><td><span class="st-on">允许</span></td><td>修改即时生效并通知全员</td></tr>
+                  <tr><td>软删除数据备查 / 导出统计（规划）</td><td><span class="st-off">—</span></td><td><span class="st-on">允许</span></td><td>随统计汇总模块一并交付</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="period-foot">
+              规则说明：① 注册成员默认为「普通成员」，由管理员分配权限；② 平台至少保留一名管理员，最后一名管理员不可被收回权限；③ 首个管理员在部署初始化时指定。
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="proto-foot">周报工作台 · 改版设计原型 v2.0「编辑部 · 墨韵」 · 静态评审稿 · 数据均为演示用虚构内容</div>
+</main>
+
+<!-- 周期选择弹层 -->
+<div class="modal-mask" id="periodModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="更换周期">
+    <div class="modal-head">
+      <h3>更换周期</h3>
+      <span class="tag auto" id="pmTypeTag">周报</span>
+      <button class="btn sm ghost" onclick="closePeriodModal()" style="border:none;">✕</button>
+    </div>
+    <div class="pm-quick" id="pmQuick"></div>
+    <div class="pm-date-row">
+      <label>选择日期</label>
+      <input type="date" id="pmDate" min="2025-11-17" max="2026-11-17"/>
+    </div>
+    <div style="font-size:11.5px;color:var(--ink-faint);margin-bottom:var(--s4);">
+      可补填 1 年内的报告 · 最早 2025.11.17 · 编号按所选周期自动生成
+    </div>
+    <div class="pm-foot">
+      <span class="pm-preview" id="pmPreview"></span>
+      <div class="pm-actions">
+        <button class="btn sm" onclick="closePeriodModal()">取消</button>
+        <button class="btn sm primary" onclick="confirmPeriod()">切换到此周期</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 变更记录 diff 弹层（版本化） -->
+<div class="modal-mask" id="diffModal" role="dialog" aria-modal="true" aria-label="变更记录对比">
+  <div class="modal wide">
+    <div class="modal-head">
+      <h3>变更记录 · <span id="diffWeekLabel">2026 年第 46 周</span></h3>
+      <span class="tag edited" id="diffEditedTag">已修改</span>
+      <button class="modal-x" onclick="closeDiffModal()" aria-label="关闭">✕</button>
+    </div>
+
+    <div class="ver-bar">
+      <span class="ver-label">对比版本</span>
+      <select class="ver-select" id="verFromSel" onchange="onVerSel('from', this.value)" aria-label="对比起点版本"></select>
+      <span class="ver-arrow">→</span>
+      <select class="ver-select" id="verToSel" onchange="onVerSel('to', this.value)" aria-label="对比终点版本"></select>
+      <button class="ver-swap" onclick="swapVer()" title="交换起点与终点">⇄ 交换</button>
+    </div>
+
+    <div class="ver-timeline" id="verTimeline"></div>
+
+    <div class="diff-meta" id="diffMetaBar"></div>
+    <div id="diffBody"></div>
+
+    <div class="diff-foot">
+      <button class="btn sm" onclick="closeDiffModal()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- 转发弹层 -->
+<div class="modal-mask" id="forwardModal" role="dialog" aria-modal="true" aria-label="转发报告">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>转发报告</h3>
+      <button class="modal-x" onclick="closeForwardModal()" aria-label="关闭">✕</button>
+    </div>
+    <div class="fw-report">
+      <div class="avatar" id="fwAvatar">许</div>
+      <div style="min-width:0;">
+        <div class="fw-title" id="fwTitle">许清楚 · 2026 年第 47 周 · 周报</div>
+        <div class="fw-excerpt" id="fwExcerpt">完成 Phase2 需求评审纪要沉淀，输出 12 月排期初稿…</div>
+      </div>
+    </div>
+
+    <div class="fw-label">转发给 · 按部门（全员）</div>
+    <div class="fw-chips" id="fwDeptChips">
+      <button class="pm-chip" data-name="研发部">研发部</button>
+      <button class="pm-chip" data-name="产品部">产品部</button>
+      <button class="pm-chip" data-name="交付部">交付部</button>
+    </div>
+
+    <div class="fw-label">转发给 · 按人员</div>
+    <div class="fw-chips" id="fwUserChips">
+      <button class="pm-chip" data-name="陈一舟">陈一舟（研发部）</button>
+      <button class="pm-chip" data-name="林晚">林晚（交付部）</button>
+      <button class="pm-chip" data-name="赵一鸣">赵一鸣（测试部）</button>
+      <button class="pm-chip" data-name="更多">＋ 更多人员</button>
+    </div>
+
+    <div class="fw-label">附言（可选，将随报告一起展示）</div>
+    <div class="fw-note-wrap">
+      <textarea class="fw-note" id="fwNote" maxlength="200" placeholder="例如：「这个站点的交付节奏可以参考」"></textarea>
+      <span class="fw-count"><span id="fwCount">0</span>/200</span>
+    </div>
+
+    <div class="fw-hint">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4m0 4h.01"/></svg>
+      <span>转发后进入对方的「转发给我的」列表 · 附言标注转发来源 · 对方权限仍受原作者可见范围限制</span>
+    </div>
+
+    <div class="diff-foot">
+      <button class="btn sm" onclick="closeForwardModal()">取消</button>
+      <button class="btn sm primary" id="fwConfirm" onclick="confirmForward()">确认转发</button>
+    </div>
+  </div>
+</div>
+
+<!-- 成员表单弹层（新增 / 编辑共用） -->
+<div class="modal-mask" id="memberModal" role="dialog" aria-modal="true" aria-label="成员信息">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="memTitle">新增成员</h3>
+      <button class="modal-x" onclick="closeModal('memberModal')" aria-label="关闭">✕</button>
+    </div>
+    <div class="fm-row"><label>姓名</label><input id="fName" maxlength="20" placeholder="真实姓名"/></div>
+    <div class="fm-row"><label>账号</label><input id="fAccount" maxlength="20" placeholder="登录账号（全公司唯一）"/></div>
+    <div class="fm-row"><label>部门</label><select id="fDept"><option>研发部</option><option>产品部</option><option>交付部</option><option>市场部</option></select></div>
+    <div class="fm-row"><label>角色</label><select id="fRole"><option>普通成员</option><option>管理员</option></select></div>
+    <div class="fm-row"><label>初始口令</label><input id="fPass" class="num gen-pass" readonly/><button class="btn sm" onclick="rollPass()">↻ 换一个</button></div>
+    <div class="fw-hint">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4m0 4h.01"/></svg>
+      <span>初始口令仅显示一次 · 成员首次登录须修改 · 管理员可进入成员管理与平台设置 · 部门为单层结构</span>
+    </div>
+    <div class="diff-foot">
+      <button class="btn sm" onclick="closeModal('memberModal')">取消</button>
+      <button class="btn sm primary" id="memConfirm" onclick="submitMember()">确认新增</button>
+    </div>
+  </div>
+</div>
+
+<!-- 重置口令弹层 -->
+<div class="modal-mask" id="resetModal" role="dialog" aria-modal="true" aria-label="重置口令">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>重置口令</h3>
+      <button class="modal-x" onclick="closeModal('resetModal')" aria-label="关闭">✕</button>
+    </div>
+    <div class="fw-report">
+      <div class="avatar" id="rsAvatar">巨</div>
+      <div style="min-width:0;">
+        <div class="fw-title" id="rsName">巨人</div>
+        <div class="fw-excerpt">账号 <span class="num" id="rsAccount">juren</span></div>
+      </div>
+    </div>
+    <div class="fm-row"><label>临时口令</label><input id="rsPass" class="num gen-pass" readonly/><button class="btn sm" onclick="rollResetPass()">↻ 换一个</button></div>
+    <div class="fw-hint">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg>
+      <span>临时口令仅显示一次 · 确认后原口令立即失效 · 成员下次登录须修改</span>
+    </div>
+    <div class="diff-foot">
+      <button class="btn sm" onclick="closeModal('resetModal')">取消</button>
+      <button class="btn sm primary" onclick="doReset()">确认重置</button>
+    </div>
+  </div>
+</div>
+
+<!-- Excel 导入弹层 -->
+<div class="modal-mask" id="importModal" role="dialog" aria-modal="true" aria-label="导入成员">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>导入成员（Excel）</h3>
+      <button class="modal-x" onclick="closeModal('importModal')" aria-label="关闭">✕</button>
+    </div>
+    <div class="mem-drop" id="dropZone" onclick="document.getElementById('fileInput').click()">
+      <div class="mem-drop-title" id="dropTitle">点击选择 .xlsx / .xls 文件，或拖拽到此处</div>
+      <div style="font-size:12px;">模板列：姓名 / 账号 / 部门 / 初始口令（留空则自动生成）</div>
+    </div>
+    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" hidden/>
+    <div style="display:flex;gap:14px;margin-top:10px;font-size:12.5px;">
+      <button class="btn sm ghost" style="border:none;padding-left:0" onclick="toast('已下载 member-template.xlsx')">⬇ 下载 Excel 模板</button>
+      <button class="btn sm ghost" style="border:none" onclick="previewImport(true)">载入示例数据预览</button>
+    </div>
+    <div class="mem-result" id="importPreview" style="display:none">
+      <div>解析完成：<b id="impStat" style="color:var(--pine)"></b><span id="impSkip" class="skip"></span></div>
+      <table>
+        <thead><tr><th>姓名</th><th>账号</th><th>部门</th><th>结果</th></tr></thead>
+        <tbody id="impRows"></tbody>
+      </table>
+    </div>
+    <div class="diff-foot">
+      <button class="btn sm" onclick="closeModal('importModal')">取消</button>
+      <button class="btn sm primary" id="impConfirm" onclick="confirmImport()" disabled>确认导入</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI 总结弹层 -->
+<div class="modal-mask" id="aiModal" role="dialog" aria-modal="true" aria-label="AI 总结">
+  <div class="modal wide">
+    <div class="modal-head">
+      <h3>✦ AI 总结</h3>
+      <button class="modal-x" onclick="closeModal('aiModal')" aria-label="关闭">✕</button>
+    </div>
+    <div class="desc" style="font-size:12.5px;color:var(--ink-soft);margin-bottom:var(--s4);">
+      通过 MCP / WorkBuddy 对指定范围内的工作日志生成结构化摘要。<b>仅读取可见范围内的日志</b>，绝不越权。
+    </div>
+
+    <div class="ai-lbl">调用引擎</div>
+    <div class="ai-engines">
+      <button class="ai-engine on" data-eng="MCP" onclick="pickEngine(this)"><span class="e-dot"></span>MCP Server</button>
+      <button class="ai-engine" data-eng="WorkBuddy" onclick="pickEngine(this)"><span class="e-dot"></span>WorkBuddy Agent</button>
+    </div>
+
+    <div id="aiScopePickers">
+      <div class="ai-lbl" id="aiDeptLbl">日志范围 · 按部门（单层）</div>
+    <div class="ai-chip-row" id="aiDeptChips">
+      <button class="ai-chip on" data-d="研发部">研发部</button>
+      <button class="ai-chip" data-d="产品部">产品部</button>
+      <button class="ai-chip" data-d="交付部">交付部</button>
+      <button class="ai-chip" data-d="全部部门">全部部门</button>
+    </div>
+
+    <div class="ai-lbl" id="aiUserLbl">日志范围 · 按人员（可选叠加）</div>
+    <div class="ai-chip-row" id="aiUserChips">
+      <button class="ai-chip" data-u="许清楚">许清楚</button>
+      <button class="ai-chip" data-u="陈一舟">陈一舟</button>
+      <button class="ai-chip" data-u="林晚">林晚</button>
+    </div>
+    </div>
+
+    <div id="aiFixedScope" style="display:none">
+      <div class="ai-lbl" style="margin-bottom:6px">日志范围</div>
+      <div><span class="tag dept" style="font-size:12.5px;padding:5px 14px">我自己的日志（固定）</span></div>
+    </div>
+
+    <div class="ai-lbl">日期范围</div>
+    <div class="ai-dates">
+      <input type="date" id="aiFrom" value="2026-11-09"/>
+      <span style="font-size:12px;color:var(--ink-faint)">至</span>
+      <input type="date" id="aiTo" value="2026-11-16"/>
+    </div>
+
+    <div class="ai-out" id="aiOut">
+      <div class="ai-placeholder" id="aiPlaceholder">选择范围后点击「生成总结」，AI 将读取范围内已提交的日志并输出结构化摘要。</div>
+      <div class="ai-body" id="aiBody" style="display:none"></div>
+    </div>
+    <div class="ai-status" id="aiStatus"></div>
+    <div class="ai-meta" id="aiMeta" style="display:none"></div>
+
+    <div class="ai-foot">
+      <button class="btn sm" onclick="closeModal('aiModal')">关闭</button>
+      <button class="btn sm ghost" id="aiCopy" onclick="copyAiResult()" style="display:none">复制全文</button>
+      <button class="btn sm primary" id="aiGen" onclick="generateAiSummary()">生成总结</button>
+    </div>
+  </div>
+</div>
+
+<!-- 未暂存修改拦截弹层 -->
+<div class="modal-mask" id="stashModal" role="dialog" aria-modal="true" aria-label="未暂存修改提醒">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>有未暂存的修改</h3>
+      <button class="modal-x" onclick="closeStash(false)" aria-label="关闭">✕</button>
+    </div>
+    <div class="stash-warn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4m0 4h.01"/></svg>
+      <span>本次编辑在停顿暂存前就离开了。<b>离开将丢弃新修改</b>，内容回退到上次自动暂存的版本<span id="stashModalTime"></span>。</span>
+    </div>
+    <div class="fw-hint" style="margin-bottom:var(--s4);">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg>
+      <span>自动暂存：输入停顿约 1 秒即静默保存草稿 · 关闭浏览器窗口前同样会得到拦截提醒</span>
+    </div>
+    <div class="diff-foot">
+      <button class="btn sm" onclick="closeStash(false)">留在本页继续编辑</button>
+      <button class="btn sm danger-ghost" onclick="closeStash(true)">丢弃修改并离开</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------- 视图切换 ---------- */
+const nav = document.getElementById('nav');
+nav.addEventListener('click', e => {
+  const btn = e.target.closest('button[data-view]');
+  if (!btn) return;
+  goto(btn.dataset.view);
+});
+
+/* ---------- 角色与权限 ---------- */
+let currentRole = 'admin';
+const ROLE_LABEL = { admin: '管理员', member: '普通成员' };
+function roleTagHTML(role) {
+  return `<span class="tag ${role === 'admin' ? 'role-admin' : 'role-member'}">${ROLE_LABEL[role]}</span>`;
+}
+function applyRoleUI() {
+  document.querySelectorAll('[data-admin="1"]').forEach(el => {
+    el.style.display = currentRole === 'admin' ? '' : 'none';
+  });
+  const mmRole = document.getElementById('mmRole');
+  if (mmRole) {
+    mmRole.textContent = ROLE_LABEL[currentRole];
+    mmRole.className = 'tag ' + (currentRole === 'admin' ? 'role-admin' : 'role-member');
+  }
+}
+function switchRole(e) {
+  e.stopPropagation();
+  closeMeMenu();
+  currentRole = currentRole === 'admin' ? 'member' : 'admin';
+  applyRoleUI();
+  const active = document.querySelector('.view.active');
+  if (active && active.dataset.admin === '1' && currentRole !== 'admin') goto('editor');
+  toast(currentRole === 'admin'
+    ? '已切换为「管理员」演示 · 成员管理与平台设置已可见'
+    : '已切换为「普通成员」演示 · 管理入口已隐藏，越权访问将被拦截');
+}
+function setIdentity(name, dept) {
+  document.getElementById('mmName').textContent = name;
+  document.getElementById('mmDept').textContent = dept;
+  document.querySelector('.topbar .me span').textContent = dept + ' · ' + name;
+  document.querySelector('.topbar .avatar').textContent = name.charAt(0);
+}
+function goto(name) {
+  const view = document.getElementById('view-' + name);
+  if (!view) return;
+  if (view.dataset.admin === '1' && currentRole !== 'admin') {
+    toast('该页面仅管理员可见 · 如需权限请联系平台管理员');
+    return;
+  }
+  if (dirty && name !== 'editor') {
+    pendingLeave = { type: 'view', name };
+    openStashModal();
+    return;
+  }
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  view.classList.add('active');
+  nav.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.view === name));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ---------- 通知系统 ---------- */
+const NOTI_META = {
+  comment: { label: '评', color: 'var(--indigo)' },
+  like:    { label: '赞', color: 'var(--zhu)' },
+  forward: { label: '转', color: 'var(--pine)' },
+  system:  { label: '系', color: 'var(--ochre)' }
+};
+let notifications = [
+  { id: 4, type: 'comment', from: '许清楚', dept: '产品部', text: '评论了你的「2026 年第 46 周 · 周报」：窗口聚合方案确认没问题…', time: '昨天 14:22', unread: true, view: 'detail' },
+  { id: 3, type: 'like',    from: '陈一舟', dept: '研发部', text: '赞了你的「2026 年第 46 周 · 周报」', time: '昨天 11:03', unread: true, view: 'detail' },
+  { id: 2, type: 'forward', from: '林晚',   dept: '交付部', text: '转发了「2026 年第 44 周 · 周报」给你，附言：割接节奏可参考', time: '昨天 09:47', unread: true, view: 'shared' },
+  { id: 1, type: 'system',  from: '平台',   dept: '',      text: '管理员更新了平台设置：月报周期已启用', time: '11.15 16:20', unread: false, view: 'mine' }
+];
+let notiSeq = 5;
+function renderNoti() {
+  const list = document.getElementById('notiList');
+  if (!notifications.length) {
+    list.innerHTML = '<div class="noti-empty">🔔 暂无通知<br/>收到评论、点赞或转发时会出现在这里</div>';
+    return;
+  }
+  list.innerHTML = notifications.map(n => {
+    const m = NOTI_META[n.type];
+    return `<div class="noti-item ${n.unread ? 'unread' : ''}" onclick="notiOpen(${n.id}, event)">
+      <span class="noti-ico" style="background:${m.color}">${m.label}</span>
+      <span class="noti-txt"><p><b>${n.from}</b>${n.dept ? `<span class="tag dept" style="margin-left:6px">${n.dept}</span>` : ''} ${n.text}</p><time>${n.time}</time></span>
+      ${n.unread ? '<span class="noti-dot"></span>' : ''}
+    </div>`;
+  }).join('');
+}
+function updateNotiBadge() {
+  const n = notifications.filter(x => x.unread).length;
+  const badge = document.getElementById('bellBadge');
+  badge.style.display = n ? 'grid' : 'none';
+  badge.textContent = n;
+  document.getElementById('notiUnread').textContent = n ? `未读 ${n}` : '已全部读完';
+}
+function toggleNoti(e) {
+  e.stopPropagation();
+  closeMeMenu();
+  const bell = document.getElementById('bellEntry');
+  bell.classList.toggle('open');
+  if (bell.classList.contains('open')) { renderNoti(); updateNotiBadge(); }
+}
+function closeNoti() { document.getElementById('bellEntry').classList.remove('open'); }
+function notiOpen(id, e) {
+  e.stopPropagation();
+  const n = notifications.find(x => x.id === id);
+  if (!n) return;
+  n.unread = false;
+  renderNoti();
+  updateNotiBadge();
+  closeNoti();
+  goto(n.view);
+}
+function markAllRead(e) {
+  e.stopPropagation();
+  notifications.forEach(n => n.unread = false);
+  renderNoti();
+  updateNotiBadge();
+  toast('已全部标记为已读');
+}
+/* 评审演示：模拟收到一条站内推送（真实环境由评论 / 点赞 / 转发 / 管理操作触发） */
+const DEMO_NOTI = [
+  { type: 'like',    from: '赵一鸣', dept: '测试部', text: '赞了你的「2026 年第 46 周 · 周报」' },
+  { type: 'comment', from: '陈一舟', dept: '研发部', text: '评论了你的「2026 年第 46 周 · 周报」：事务超时的复现步骤能补充下吗？' },
+  { type: 'forward', from: '许清楚', dept: '产品部', text: '转发了「12 月排期初稿」相关的周报给你' },
+  { type: 'system',  from: '平台',   dept: '',      text: '管理员开启了月报周期 · 从下周起可提交月报' }
+];
+let demoNotiIdx = 0;
+function demoNoti(e) {
+  e.stopPropagation();
+  const d = DEMO_NOTI[demoNotiIdx++ % DEMO_NOTI.length];
+  notifications.unshift({ id: notiSeq++, ...d, time: '刚刚', unread: true, view: d.type === 'system' ? 'mine' : (d.type === 'forward' ? 'shared' : 'detail') });
+  renderNoti();
+  updateNotiBadge();
+  const badge = document.getElementById('bellBadge');
+  badge.classList.remove('pulse');
+  void badge.offsetWidth;
+  badge.classList.add('pulse');
+  toast(`收到新通知：${d.from} · ${NOTI_META[d.type].label}（点击顶栏铃铛查看）`);
+}
+
+/* ---------- 全局搜索 ---------- */
+const SEARCH_INDEX = [
+  { group: '我的周报', title: '2026 年第 47 周 · 周报（草稿）', excerpt: '完成 CPE-OTN 网管 NETCONF 告警同步模块联调 · 推进 FSL8147 压测计划', view: 'mine' },
+  { group: '我的周报', title: '2026 年第 46 周 · 周报', excerpt: '修复 Phase2 项目 5 个缺陷，完成 bug-fetcher 技能端到端验证', view: 'detail' },
+  { group: '我的周报', title: '2026 年第 45 周 · 周报', excerpt: 'OTN 告警性能优化专项，P95 查询耗时从 2.1s 降至 760ms', view: 'detail' },
+  { group: '我的周报', title: '2026 年第 41 周 · 周报', excerpt: 'FSL8147 网监软件需求澄清，输出网监侧告警字段映射表', view: 'mine' },
+  { group: '我可查看的', who: '许清楚', dept: '产品部', title: '2026 年第 47 周 · 周报', excerpt: '完成 Phase2 需求评审纪要沉淀，输出 12 月排期初稿', view: 'shared' },
+  { group: '我可查看的', who: '陈一舟', dept: '研发部', title: '2026 年第 47 周 · 周报', excerpt: 'NETCONF 网管子模块联调，修复事务超时问题', view: 'shared' },
+  { group: '我可查看的', who: '林晚', dept: '交付部', title: '2026 年 11 月 · 月报', excerpt: '本月完成 3 个站点交付，客户验收一次通过率 100%', view: 'shared' },
+  { group: '我可查看的', who: '林晚', dept: '交付部', title: '2026 年第 45 周 · 周报', excerpt: '苏州站点割接完成，零故障回退，输出割接手册 v2', view: 'shared' }
+];
+function hi(text, q) {
+  const i = text.toLowerCase().indexOf(q.toLowerCase());
+  if (i < 0) return text;
+  return text.slice(0, i) + '<mark>' + text.slice(i, i + q.length) + '</mark>' + text.slice(i + q.length);
+}
+function doSearch(q) {
+  q = (q || '').trim();
+  const pop = document.getElementById('searchPop');
+  if (!q) {
+    pop.innerHTML = `<div class="search-group">快速检索</div><div style="display:flex;gap:8px;padding:12px 14px;">${['NETCONF', '割接', '第 45 周'].map(k => `<button class="pm-chip" onclick="quickSearch('${k}')">${k}</button>`).join('')}</div>`;
+    pop.classList.add('show');
+    return;
+  }
+  const kw = q.toLowerCase();
+  const hits = SEARCH_INDEX.filter(x => (x.title + x.excerpt + (x.who || '') + (x.dept || '')).toLowerCase().includes(kw));
+  if (!hits.length) {
+    pop.innerHTML = `<div class="search-empty">未找到与「${q}」相关的周报<br/>试试人名、项目名（如 NETCONF）或周期（如 第 45 周）</div>`;
+    pop.classList.add('show');
+    return;
+  }
+  const groups = {};
+  hits.forEach(h => (groups[h.group] = groups[h.group] || []).push(h));
+  pop.innerHTML = Object.entries(groups).map(([g, arr]) => `
+    <div class="search-group">${g} · ${arr.length} 条结果</div>
+    ${arr.map(h => `<button class="search-item" onclick="searchGo('${h.view}','${g}')">
+      <span class="si-title">${h.who ? `<span class="who">${hi(h.who, q)}</span><span class="tag dept">${h.dept}</span>` : ''}${hi(h.title, q)}</span>
+      <span class="si-ex">${hi(h.excerpt, q)}</span>
+    </button>`).join('')}`).join('');
+  pop.classList.add('show');
+}
+function quickSearch(k) { document.getElementById('searchInput').value = k; doSearch(k); }
+function searchGo(view, group) {
+  closeSearch();
+  goto(view);
+  toast(`已定位到「${group}」中的匹配结果`);
+}
+function closeSearch() { document.getElementById('searchPop').classList.remove('show'); }
+
+/* ---------- 我的周报 · 按周期归档 ---------- */
+function archiveToggle(btn, on) {
+  [...btn.parentElement.children].forEach(b => b.classList.toggle('on', b === btn));
+  renderMineArchive(on);
+}
+function renderMineArchive(on) {
+  const list = document.getElementById('mineList');
+  list.querySelectorAll('.month-cap').forEach(c => c.remove());
+  if (!on) return;
+  const rows = [...list.querySelectorAll('.row-card')];
+  const counts = {};
+  rows.forEach(r => { counts[r.dataset.month] = (counts[r.dataset.month] || 0) + 1; });
+  let cur = null;
+  rows.forEach(r => {
+    const m = r.dataset.month;
+    if (m === cur) return;
+    cur = m;
+    const cap = document.createElement('div');
+    cap.className = 'month-cap';
+    cap.innerHTML = `<b>${m.slice(0, 4)} 年 ${parseInt(m.slice(5), 10)} 月</b><span class="num">${counts[m]} 篇 · 按提交时间倒序</span>`;
+    list.insertBefore(cap, r);
+  });
+}
+
+/* ---------- 周报详情 · 归档翻页 ---------- */
+const AVATAR_COLOR = { '许清楚': 'var(--indigo)', '陈一舟': 'var(--ochre)', '林晚': 'var(--pine)' };
+const CN_NUM = ['一', '二', '三', '四', '五'];
+const DETAIL_DATA = {
+  47: {
+    range: '2026.11.16 — 11.22', rangeFull: '2026.11.16 — 2026.11.22', state: 'draft',
+    summary: [
+      { p: '完成 CPE-OTN 网管 NETCONF 告警同步模块联调，修复 3 个 Redmine 缺陷并回归通过。', attach: 'alarm-sync-test.xlsx · 284 KB' },
+      { p: '输出 bug-fetcher 技能与 Redmine 打通方案初稿，待评审。' }
+    ],
+    plan: ['推进 FSL8147 网监软件性能压测，目标 P95 响应 < 800ms。'],
+    comments: [], excerpt: '完成 CPE-OTN 网管 NETCONF 告警同步模块联调 · 推进 FSL8147 压测计划'
+  },
+  46: {
+    range: '2026.11.09 — 11.15', rangeFull: '2026.11.09 — 2026.11.15', state: 'submitted', submitDate: '11.16 09:41',
+    summary: [
+      { p: '完成 CPE-OTN 网管 NETCONF 告警同步模块联调，修复 3 个 Redmine 缺陷并回归通过。其中告警去重策略按网监软件侧意见调整了两版，最终采用窗口聚合方案。', attach: 'alarm-sync-test.xlsx · 284 KB' },
+      { p: '输出 bug-fetcher 技能与 Redmine 打通方案初稿，待评审。' }
+    ],
+    plan: ['推进 FSL8147 网监软件性能压测，目标 P95 响应 < 800ms；同步启动 issue-analyzer 技能设计。'],
+    like: 12,
+    comments: [
+      { name: '许清楚', dept: '产品部', time: '昨天 14:22 · 当周评论', text: '窗口聚合方案确认没问题，网监侧这周会同步灰度。', op: 'del' },
+      { deleted: '该评论由 陈一舟 于 11.13 删除', tagtext: '软删除 · 11.12 发表', note: '超过当周的评论仅可软删除，数据保留备查' },
+      { name: '林晚', dept: '交付部', time: '11.10 10:05 · 超过当周', text: '割接手册的告警回切章节可以复用你这篇的结论。', op: 'soft' }
+    ],
+    excerpt: '修复 Phase2 项目 5 个缺陷，完成 bug-fetcher 技能端到端验证…'
+  },
+  45: {
+    range: '2026.11.02 — 11.08', rangeFull: '2026.11.02 — 2026.11.08', state: 'submitted', submitDate: '11.09 18:20',
+    summary: [
+      { p: 'OTN 告警性能优化专项，P95 查询耗时从 2.1s 降至 760ms。' },
+      { p: '完成 FSL8147 一轮回归测试，遗留 2 个非阻塞缺陷。' }
+    ],
+    plan: ['输出告警优化方案复盘文档，同步交付部。'],
+    like: 8,
+    comments: [
+      { name: '陈一舟', dept: '研发部', time: '11.06 15:40 · 当周评论', text: '2.1s 到 760ms，这个优化思路值得在评审会上讲讲。', op: 'del' },
+      { name: '林晚', dept: '交付部', time: '11.04 09:12 · 当周评论', text: '割接窗口如果按这个耗时优化，手册里的告警回切要改一版。', op: 'del' }
+    ],
+    excerpt: 'OTN 告警性能优化专项，P95 查询耗时从 2.1s 降至 760ms…'
+  }
+};
+let curWeek = 46;
+const WEEKS = [45, 46, 47];
+function entryHTML(e, i) {
+  return `<div class="entry">
+    <div class="entry-meta"><span class="block-no num" style="width:18px;height:18px;font-size:11px">${i + 1}</span><span>条目${CN_NUM[i] || i + 1}</span></div>
+    <p>${e.p}</p>
+    ${e.attach ? `<div class="entry-attach"><span class="attach-chip">📎 ${e.attach}</span></div>` : ''}
+  </div>`;
+}
+function commentHTML(c) {
+  if (c.deleted) {
+    return `<div class="deleted-comment">
+      <span>🗑 ${c.deleted}</span><span class="tag soft">${c.tagtext}</span><span style="flex:1"></span>
+      <span style="font-size:11px">${c.note}</span>
+    </div>`;
+  }
+  return `<div class="comment-item">
+    <div class="avatar" style="background:${AVATAR_COLOR[c.name] || 'var(--indigo)'}">${c.name.charAt(0)}</div>
+    <div class="comment-body">
+      <div class="comment-head"><span class="name">${c.name}</span><span class="tag dept">${c.dept}</span><span class="time">${c.time}</span></div>
+      <div class="comment-text">${c.text}</div>
+    </div>
+    <div class="comment-ops"><button class="btn sm danger-ghost" onclick="toast('${c.op === 'del' ? '当周评论：直接删除，彻底移除（静态演示）' : '上周之前的评论：仅软删除（静态演示）'}')">${c.op === 'del' ? '删除' : '软删除'}</button></div>
+  </div>`;
+}
+function renderDetail(w) {
+  const d = DETAIL_DATA[w];
+  curWeek = w;
+  document.querySelector('#view-detail .week-cn').innerHTML = `第 <em class="num">${w}</em> 周 · 周报`;
+  document.getElementById('detailDate').textContent = d.range;
+  const hasVer = !!VERSIONS[w] && d.state !== 'draft';
+  const verCnt = hasVer ? VERSIONS[w].length - 1 : 0;
+  document.getElementById('detailMeta').innerHTML = d.state === 'draft'
+    ? `<span class="avatar" style="width:24px;height:24px;font-size:11px">巨</span><b>巨人</b><span class="tag dept">研发部</span><span>自动暂存于 11.17 21:05</span><span class="tag draft">草稿</span>`
+    : `<span class="avatar" style="width:24px;height:24px;font-size:11px">巨</span><b>巨人</b><span class="tag dept">研发部</span><span>提交于 ${d.submitDate}</span><span class="tag submitted">已提交</span>${hasVer ? `<span class="tag edited" style="cursor:pointer" onclick="openDiffModal(${w})" title="查看版本历史与任意两版对比">已修改 ${verCnt} 次 · 查看版本</span>` : ''}`;
+  document.getElementById('detailActions').innerHTML = d.state === 'draft'
+    ? `<button class="btn sm" onclick="goto('editor')">✎ 继续编辑</button>
+       <button class="btn sm danger-ghost" onclick="toast('草稿可删除（静态演示）')">删除</button>
+       <span style="font-size:11.5px;color:var(--ink-faint);align-self:center;">草稿仅本人可见</span>`
+    : `<button class="btn sm" onclick="toast('已点赞（静态演示）')">👍 点赞 ${d.like}</button>
+       <button class="btn sm" onclick="openForwardModal('巨人 · ${w} 周 · 周报', '${d.excerpt}', '巨', 'var(--zhu)')">↻ 转发</button>
+       ${hasVer ? `<button class="btn sm" onclick="openDiffModal(${w})">⟲ 变更记录</button>` : ''}
+       <button class="btn sm" onclick="editCurrent()">✎ 修改</button>
+       <span style="font-size:11.5px;color:var(--ink-faint);align-self:center;">提交后不可删除</span>`;
+  document.getElementById('secSummary').innerHTML =
+    `<h2>上周总结<span class="mark">${d.summary.length} 条${d.summary.some(e => e.attach) ? ' · 附件 1' : ''}</span></h2>` +
+    d.summary.map(entryHTML).join('');
+  document.getElementById('secPlan').innerHTML =
+    `<h2>本周计划<span class="mark">${d.plan.length} 条</span></h2>` +
+    d.plan.map(p => entryHTML({ p }, d.plan.indexOf(p))).join('');
+  const list = d.comments.length
+    ? d.comments.map(commentHTML).join('')
+    : '<div class="noti-empty" style="padding:24px 0">还没有评论 · 看完说点什么吧</div>';
+  document.getElementById('secComments').innerHTML =
+    `<h2>评论<span class="mark">${d.comments.length} 条 · 按时间倒序</span></h2>
+     <div class="comment-list" id="detailCommentList">${list}</div>
+     <div class="comment-input">
+       <textarea id="commentText" placeholder="写下你的评论（纯文本，支持 1000 字）……"></textarea>
+       <button class="btn primary" style="align-self:flex-end" onclick="publishComment()">发布</button>
+     </div>`;
+  const idx = WEEKS.indexOf(w);
+  document.getElementById('pagerCur').textContent = `2026-W${w} · 第 ${idx + 1} / ${WEEKS.length} 篇`;
+  document.getElementById('pagerPrev').disabled = idx === 0;
+  document.getElementById('pagerNext').disabled = idx === WEEKS.length - 1;
+}
+function editCurrent() {
+  const w = curWeek, d = DETAIL_DATA[w];
+  enterEditMode(`2026 年第 ${w} 周 · 周报`, {
+    big: `第 <span class="wk num">${w}</span> 周`,
+    range: `<b>${d.rangeFull.split(' — ')[0]}</b> — <b>${d.rangeFull.split(' — ')[1]}</b> · <span id="periodLabel">周报</span>`,
+    meta: `<span class="dot">编号 2026-W${w} · ${d.state === 'draft' ? '草稿' : '提交于 ' + d.submitDate} · 修改留痕</span>`,
+    summary: d.summary.map(e => ({ text: e.p })),
+    plan: d.plan.map(p => ({ text: p }))
+  });
+}
+function pagerGo(dir) {
+  const t = curWeek + dir;
+  if (!DETAIL_DATA[t]) return;
+  renderDetail(t);
+  toast(`已切换到 2026 年第 ${t} 周 · 条目与评论随报告加载`);
+}
+
+/* ---------- 草稿自动暂存 + 离开拦截 ---------- */
+let dirty = false, stashTimer = null, stashTimeText = '', pendingLeave = null, stashSnapshot = null;
+function captureStash() {
+  stashSnapshot = [...document.querySelectorAll('#view-editor textarea')].map(t => t.value);
+}
+captureStash();
+function nowHM() { const n = new Date(); return `${n.getHours()}:${String(n.getMinutes()).padStart(2, '0')}`; }
+function setStashChip(state) {
+  const chip = document.getElementById('stashChip');
+  if (!chip) return; /* 切换周期后 weekMeta 重绘，暂存提示可能不存在 */
+  if (state === 'editing') {
+    chip.className = 'stash-chip editing';
+    chip.textContent = '编辑中 · 停顿约 1 秒后自动暂存…';
+  } else {
+    chip.className = 'stash-chip';
+    chip.textContent = `已自动暂存 ${nowHM()} · 仅本人可见`;
+  }
+}
+function markDirty() {
+  dirty = true;
+  setStashChip('editing');
+  clearTimeout(stashTimer);
+  stashTimer = setTimeout(() => {
+    dirty = false;
+    captureStash();
+    stashTimeText = nowHM();
+    setStashChip('saved');
+  }, 1000);
+}
+document.getElementById('view-editor').addEventListener('input', markDirty);
+document.getElementById('view-editor').addEventListener('change', e => { if (e.target.name === 'vis') markDirty(); });
+function discardDraft() {
+  document.querySelectorAll('#view-editor textarea').forEach((t, i) => { t.value = stashSnapshot[i] ?? ''; });
+  dirty = false;
+  clearTimeout(stashTimer);
+  setStashChip('saved');
+}
+function openStashModal() {
+  document.getElementById('stashModalTime').textContent = stashTimeText ? `（上次暂存于 ${stashTimeText}）` : '';
+  document.getElementById('stashModal').classList.add('show');
+}
+function closeStash(discard) {
+  document.getElementById('stashModal').classList.remove('show');
+  if (!discard) { pendingLeave = null; return; }
+  discardDraft();
+  const p = pendingLeave;
+  pendingLeave = null;
+  toast('已丢弃未暂存的修改 · 内容回退到上次暂存版本');
+  if (p && p.type === 'view') goto(p.name);
+  else if (p && p.type === 'logout') doLogout();
+}
+document.getElementById('stashModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeStash(false);
+});
+window.addEventListener('beforeunload', e => {
+  if (dirty) { e.preventDefault(); e.returnValue = ''; }
+});
+
+/* ---------- 评审面板 ---------- */
+const reviewToggle = document.getElementById('reviewToggle');
+const reviewPanel = document.getElementById('reviewPanel');
+reviewToggle.addEventListener('click', () => {
+  reviewPanel.classList.toggle('show');
+  reviewToggle.textContent = reviewPanel.classList.contains('show') ? '收起需求对照表' : '展开需求对照表';
+});
+
+/* ---------- 多文本框 ---------- */
+function addBlock(containerId) {
+  markDirty();
+  const box = document.getElementById(containerId);
+  const no = box.children.length + 1;
+  const card = document.createElement('div');
+  card.className = 'block-card';
+  card.innerHTML = `
+    <div class="block-head">
+      <span class="block-no num">${no}</span>
+      <span style="flex:1"></span>
+      <button class="block-del" onclick="removeBlock(this)">移除</button>
+    </div>
+    <textarea placeholder="这一条做了什么、结果如何……（纯文本）"></textarea>
+    <div class="block-foot">
+      <button class="attach-btn" onclick="addAttach(this)">＋ 添加附件</button>
+      <span class="flex"></span>
+    </div>`;
+  box.appendChild(card);
+  card.querySelector('textarea').focus();
+  renumber(box);
+}
+function removeBlock(btn) {
+  markDirty();
+  const card = btn.closest('.block-card');
+  const box = card.parentElement;
+  if (box.children.length === 1) {
+    toast('至少保留一条，可直接清空内容');
+    return;
+  }
+  const idx = [...box.children].indexOf(card);
+  const text = card.querySelector('textarea').value.trim();
+  card.style.opacity = '0';
+  card.style.transform = 'translateY(-4px)';
+  setTimeout(() => {
+    card.remove();
+    renumber(box);
+    toast(`已移除第 ${idx + 1} 条${text ? '（内容：' + text.slice(0, 8) + '…）' : ''}`, {
+      label: '撤销',
+      fn: () => {
+        card.style.opacity = '';
+        card.style.transform = '';
+        box.insertBefore(card, box.children[idx] || null);
+        renumber(box);
+      }
+    });
+  }, 160);
+}
+function renumber(box) {
+  [...box.children].forEach((c, i) => { const n = c.querySelector('.block-no'); if (n) n.textContent = i + 1; });
+}
+
+/* ---------- 附件（演示：轮换追加芯片） ---------- */
+const DEMO_FILES = [['需求清单.xlsx', '96 KB'], ['测试记录.docx', '58 KB'], ['联调架构图.png', '1.1 MB'], ['数据导出.csv', '24 KB']];
+let fileIdx = 0;
+function addAttach(btn) {
+  markDirty();
+  const [name, size] = DEMO_FILES[fileIdx++ % DEMO_FILES.length];
+  const chip = document.createElement('span');
+  chip.className = 'attach-chip';
+  chip.innerHTML = `📎 ${name} <span class="size">${size}</span>`;
+  btn.closest('.block-foot').insertBefore(chip, btn.nextSibling);
+  toast(`已添加附件「${name}」`);
+}
+
+/* ---------- 可见范围 ---------- */
+function visToggle(custom) {
+  document.getElementById('customVis').classList.toggle('show', custom);
+  if (!custom) closePickPop();
+}
+
+/* 可见范围 · 部门 / 人员选择弹卡 */
+const VIS_DEPTS = ['研发部', '产品部', '交付部', '测试部', '平台组'];
+const VIS_PERSONS = [
+  { n: '许清楚', d: '研发部' }, { n: '陈一舟', d: '研发部' }, { n: '沈墨', d: '研发部' },
+  { n: '林晚', d: '交付部' }, { n: '赵一鸣', d: '测试部' }, { n: '周雨桐', d: '平台组' }
+];
+const visSel = {
+  dept: new Set(['研发部', '产品部']),
+  person: new Set(['许清楚', '陈一舟', '林晚'])
+};
+let pickPop = null, pickType = null, pickKw = '', pickOpenedAt = 0;
+
+function openPickPop(type, trigger) {
+  if (pickPop && pickType === type && pickPop.classList.contains('show')) { closePickPop(); return; }
+  closePickPop();
+  pickType = type;
+  pickKw = '';
+  pickPop = document.createElement('div');
+  pickPop.className = 'pick-pop';
+  document.body.appendChild(pickPop);
+  renderPickPop();
+  const r = trigger.getBoundingClientRect();
+  const left = Math.min(r.left, window.innerWidth - 284);
+  const popH = pickPop.offsetHeight || 300;
+  let top = r.bottom + 6;
+  if (top + popH > window.innerHeight - 8) top = Math.max(8, r.top - popH - 6);
+  pickPop.style.left = left + 'px';
+  pickPop.style.top = top + 'px';
+  pickPop.classList.add('show');
+  pickOpenedAt = Date.now();
+  const search = pickPop.querySelector('input');
+  if (search) search.focus();
+}
+function closePickPop() {
+  if (pickPop) { pickPop.remove(); pickPop = null; pickType = null; }
+}
+function renderPickPop() {
+  const isDept = pickType === 'dept';
+  const list = isDept
+    ? VIS_DEPTS.map(n => ({ name: n, sub: '部门' }))
+    : VIS_PERSONS.filter(p => !pickKw || p.n.includes(pickKw) || p.d.includes(pickKw))
+        .map(p => ({ name: p.n, sub: p.d }));
+  const sel = visSel[pickType];
+  const rows = list.map(it => `
+    <button type="button" class="pick-item${sel.has(it.name) ? ' on' : ''}" onclick="visPick('${pickType}', '${it.name}')">
+      <span class="p-check">✓</span>
+      <span class="p-ava">${it.name[0]}</span>
+      <span>${it.name}</span>
+      <span class="p-sub">${it.sub}</span>
+    </button>`).join('');
+  pickPop.innerHTML = `
+    <div class="pick-head">选择${isDept ? '部门' : '人员'}<span class="cnt">已选 ${sel.size}</span></div>
+    ${!isDept ? '<div class="pick-search"><input placeholder="搜索姓名或部门…" value="' + pickKw + '" oninput="pickSearch(this.value)"/></div>' : ''}
+    <div class="pick-list">${rows || '<div class="pick-empty">没有匹配的人员</div>'}</div>
+    <div class="pick-foot">点选即添加 / 再点移除 · 已选项同步为芯片</div>`;
+}
+function pickSearch(v) {
+  pickKw = v.trim();
+  renderPickPop();
+  const input = pickPop.querySelector('.pick-search input');
+  if (input) { input.focus(); input.setSelectionRange(input.value.length, input.value.length); }
+}
+function visPick(type, name) {
+  const set = visSel[type];
+  if (set.has(name)) {
+    set.delete(name);
+    const chip = document.querySelector(`#${type === 'dept' ? 'visDeptRow' : 'visPersonRow'} .chip[data-name="${name}"]`);
+    if (chip) { chip.classList.add('out'); setTimeout(() => chip.remove(), 170); }
+  } else {
+    set.add(name);
+    const chip = document.createElement('span');
+    chip.className = 'chip pop' + (type === 'dept' ? ' dept' : '');
+    chip.dataset.name = name;
+    chip.innerHTML = `${name} <i class="x">✕</i>`;
+    document.getElementById(type === 'dept' ? 'visDeptRow' : 'visPersonRow')
+      .querySelector('.add-chip').before(chip);
+  }
+  if (pickPop && pickType === type) renderPickPop();
+}
+/* 移除可见范围芯片（✕），弹卡勾选同步 */
+document.addEventListener('click', e => {
+  const x = e.target.closest('#customVis .chip .x');
+  if (!x) return;
+  const chip = x.closest('.chip');
+  const type = chip.classList.contains('dept') ? 'dept' : 'person';
+  visSel[type].delete(chip.dataset.name);
+  chip.classList.add('out');
+  setTimeout(() => chip.remove(), 170);
+  if (pickPop && pickType === type) renderPickPop();
+});
+document.addEventListener('scroll', () => {
+  if (!pickPop) return;
+  if (Date.now() - pickOpenedAt < 300) return; /* 打开瞬间的程序性滚动不关闭 */
+  closePickPop();
+}, true);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePickPop(); });
+document.addEventListener('click', e => {
+  if (pickPop && !e.target.closest('.pick-pop') && !e.target.closest('.add-chip')) closePickPop();
+});
+
+/* ---------- 分享/转发页签 ---------- */
+function srcTab(which) {
+  document.getElementById('listShared').style.display = which === 'shared' ? 'flex' : 'none';
+  document.getElementById('listForward').style.display = which === 'forward' ? 'flex' : 'none';
+  document.getElementById('tabShared').classList.toggle('on', which === 'shared');
+  document.getElementById('tabForward').classList.toggle('on', which === 'forward');
+}
+
+/* ---------- 点赞 ---------- */
+function likeToggle(btn) {
+  btn.classList.toggle('liked');
+  const n = btn.querySelector('.num');
+  n.textContent = parseInt(n.textContent) + (btn.classList.contains('liked') ? 1 : -1);
+}
+
+/* ---------- 报告周期切换：输入区整体联动 ---------- */
+const PERIODS = {
+  '周报': {
+    big: '第 <span class="wk num">47</span> 周',
+    range: '<b>2026.11.16</b> — <b>2026.11.22</b> · 周报',
+    meta: ['编号 2026-W47 · 可补填 1 年内'],
+    fill: '新建周报时已从 <b>上周计划</b> 自动带入 <b>2 条</b> 到「上周总结」，可直接编辑或逐条移除。',
+    summaryTitle: '上周总结', planTitle: '本周计划',
+    planNote: '将自动带入下周的「上周总结」',
+    addS: '＋ 添加一条总结', addP: '＋ 添加一条计划',
+    autoLabel: '来自上周计划的自动带入',
+    summary: [
+      { auto: true, text: '完成 CPE-OTN 网管 NETCONF 告警同步模块联调，修复 3 个 Redmine 缺陷并回归通过。', attach: 'alarm-sync-test.xlsx · 284 KB' },
+      { text: '输出 bug-fetcher 技能与 Redmine 打通方案初稿，待评审。' }
+    ],
+    plan: [
+      { text: '推进 FSL8147 网监软件性能压测，目标 P95 响应 < 800ms。' }
+    ]
+  },
+  '日报': {
+    big: '11 月 <span class="wk num">17</span> 日',
+    range: '<b>2026.11.17</b>（周二） · 日报',
+    meta: ['编号 2026-11-17 · 可补填 1 年内'],
+    fill: '新建日报时已从 <b>昨日计划</b> 自动带入 <b>1 条</b> 到「昨日总结」，可直接编辑或逐条移除。',
+    summaryTitle: '昨日总结', planTitle: '今日计划',
+    planNote: '将自动带入明天的「昨日总结」',
+    addS: '＋ 添加一条昨日总结', addP: '＋ 添加一条今日计划',
+    autoLabel: '来自昨日计划的自动带入',
+    summary: [
+      { auto: true, text: '修复原型评审提出的周期切换问题：日报 / 周报 / 月报的输入区已随周期联动刷新。' }
+    ],
+    plan: [
+      { text: '收集评审团对「编辑部·墨韵」视觉方向的反馈，输出修改清单。' }
+    ]
+  },
+  '月报': {
+    big: '2026 年 <span class="wk num">11</span> 月',
+    range: '<b>2026.11.01</b> — <b>2026.11.30</b> · 月报',
+    meta: ['编号 2026-M11 · 可补填 1 年内'],
+    fill: '新建月报时已从 <b>上月计划</b> 自动带入 <b>2 条</b> 到「上月总结」，可直接编辑或逐条移除。',
+    summaryTitle: '上月总结', planTitle: '下月计划',
+    planNote: '将自动带入下月的「上月总结」',
+    addS: '＋ 添加一条上月总结', addP: '＋ 添加一条下月计划',
+    autoLabel: '来自上月计划的自动带入',
+    summary: [
+      { auto: true, text: '完成周报平台一期上线：登录、周报、自评、授权、评论、留痕全流程可用。' },
+      { text: '搭建 Docker 部署与每日自动备份链路，备份滚动保留 30 份。', attach: 'deploy-runbook.pdf · 1.2 MB' }
+    ],
+    plan: [
+      { text: '启动二期 AI 总结（MCP / WorkBuddy）联调，读取范围按可见范围圈定。' }
+    ]
+  }
+};
+
+function blockHTML(no, b, autoLabel) {
+  return `<div class="block-card">
+    <div class="block-head">
+      <span class="block-no num">${no}</span>
+      ${b.auto ? `<span style="font-size:12px;color:var(--ink-faint)">${autoLabel}</span>` : ''}
+      <span style="flex:1"></span>
+      <button class="block-del" onclick="removeBlock(this)">移除</button>
+    </div>
+    <textarea placeholder="这一条做了什么、结果如何……（纯文本）">${b.text}</textarea>
+    <div class="block-foot">
+      <button class="attach-btn" onclick="addAttach(this)">＋ 添加附件</button>
+      ${b.attach ? `<span class="attach-chip">📎 ${b.attach}</span>` : ''}
+      <span class="flex"></span>
+    </div>
+  </div>`;
+}
+
+function renderBlocks(containerId, list, autoLabel) {
+  const box = document.getElementById(containerId);
+  box.innerHTML = list.map((b, i) => blockHTML(i + 1, b, autoLabel)).join('');
+}
+
+function renderPeriod(key) {
+  const p = PERIODS[key];
+  if (!p) return;
+  document.getElementById('weekBig').innerHTML = p.big;
+  document.getElementById('weekRange').innerHTML = p.range + ' · <span id="periodLabel">' + key + '</span>';
+  document.getElementById('weekMeta').innerHTML = p.meta.map(m => `<span class="dot">${m}</span>`).join('');
+  document.getElementById('fillText').innerHTML = p.fill;
+  document.getElementById('summaryTitle').textContent = p.summaryTitle;
+  document.getElementById('planTitle').textContent = p.planTitle;
+  document.getElementById('planNote').textContent = p.planNote;
+  document.getElementById('addSummary').textContent = p.addS;
+  document.getElementById('addPlan').textContent = p.addP;
+  renderBlocks('summaryBlocks', p.summary, p.autoLabel);
+  renderBlocks('planBlocks', p.plan, p.autoLabel);
+}
+
+document.querySelectorAll('.period-tabs button').forEach(b => {
+  b.addEventListener('click', () => {
+    if (b.disabled) return;
+    document.querySelectorAll('.period-tabs button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    currentPeriod = b.dataset.period;
+    renderPeriod(b.dataset.period);
+    toast('已切换为' + b.dataset.period + ' · 输入区已按周期刷新');
+  });
+});
+
+/* ---------- 更换周期弹层 ---------- */
+let currentPeriod = '周报';
+let pmItems = [], pmPicked = null;
+const DAY = 86400000;
+const pad2 = n => String(n).padStart(2, '0');
+const fmtD = d => `${d.getFullYear()}.${pad2(d.getMonth() + 1)}.${pad2(d.getDate())}`;
+const toIso = d => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+
+function isoWeekOf(d) {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = (date.getUTCDay() + 6) % 7;
+  date.setUTCDate(date.getUTCDate() - dayNum + 3);
+  const firstThu = new Date(Date.UTC(date.getUTCFullYear(), 0, 4));
+  const fDayNum = (firstThu.getUTCDay() + 6) % 7;
+  firstThu.setUTCDate(firstThu.getUTCDate() - fDayNum + 3);
+  const week = 1 + Math.round((date - firstThu) / (7 * DAY));
+  const monday = new Date(date); monday.setUTCDate(date.getUTCDate() - 3);
+  const sunday = new Date(monday); sunday.setUTCDate(monday.getUTCDate() + 6);
+  return { year: date.getUTCFullYear(), week, monday, sunday };
+}
+
+function pmLabel(d) {
+  if (currentPeriod === '周报') {
+    const w = isoWeekOf(d);
+    return `${w.year} 年第 ${w.week} 周（${fmtD(w.monday)} — ${fmtD(w.sunday)}）`;
+  }
+  if (currentPeriod === '日报') {
+    return `${d.getFullYear()}.${pad2(d.getMonth() + 1)}.${pad2(d.getDate())}（周${'日一二三四五六'[d.getDay()]}）`;
+  }
+  return `${d.getFullYear()} 年 ${d.getMonth() + 1} 月`;
+}
+
+function openPeriodModal() {
+  document.getElementById('pmTypeTag').textContent = currentPeriod;
+  document.getElementById('pmDate').max = toIso(new Date());
+  buildQuick();
+  document.getElementById('periodModal').classList.add('show');
+  setTimeout(() => document.getElementById('pmDate').focus(), 60);
+}
+function closePeriodModal() {
+  document.getElementById('periodModal').classList.remove('show');
+}
+document.getElementById('periodModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closePeriodModal();
+});
+
+function buildQuick() {
+  const today = new Date();
+  pmItems = [];
+  if (currentPeriod === '周报') {
+    for (let i = 0; i < 4; i++) {
+      const d = new Date(today); d.setDate(d.getDate() - 7 * i);
+      const w = isoWeekOf(d);
+      pmItems.push({ date: d, text: `第 ${w.week} 周`, label: ['本周', '上一周', '上上周', '三周前'][i], miss: i === 1 });
+    }
+  } else if (currentPeriod === '日报') {
+    for (let i = 0; i < 3; i++) {
+      const d = new Date(today); d.setDate(d.getDate() - i);
+      pmItems.push({ date: d, text: `${d.getMonth() + 1} 月 ${d.getDate()} 日`, label: ['今天', '昨天', '前天'][i], miss: i === 1 });
+    }
+  } else {
+    for (let i = 0; i < 3; i++) {
+      const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      pmItems.push({ date: d, text: `${d.getFullYear()} 年 ${d.getMonth() + 1} 月`, label: ['本月', '上月', '前两月'][i], miss: i === 1 });
+    }
+  }
+  const box = document.getElementById('pmQuick');
+  box.innerHTML = pmItems.map((it, i) =>
+    `<button class="pm-chip${it.miss ? ' miss' : ''}" data-i="${i}">${it.label} · ${it.text}${it.miss ? '<i>未填写</i>' : ''}</button>`
+  ).join('');
+  box.querySelectorAll('.pm-chip').forEach(c => c.addEventListener('click', () => pickQuick(+c.dataset.i)));
+  pickQuick(0);
+}
+
+function pickQuick(i) {
+  pmPicked = new Date(pmItems[i].date);
+  document.getElementById('pmDate').value = toIso(pmPicked);
+  syncChipState();
+  updatePreview();
+}
+function syncChipState() {
+  document.querySelectorAll('#pmQuick .pm-chip').forEach(c => {
+    const it = pmItems[+c.dataset.i];
+    if (!it) return;
+    c.classList.toggle('on', pmPicked && toIso(it.date) === toIso(pmPicked));
+  });
+}
+function updatePreview() {
+  document.getElementById('pmPreview').textContent = '将切换为：' + pmLabel(pmPicked);
+}
+document.getElementById('pmDate').addEventListener('change', e => {
+  if (!e.target.value) return;
+  const [y, m, d] = e.target.value.split('-').map(Number);
+  pmPicked = new Date(y, m - 1, d);
+  syncChipState();
+  updatePreview();
+});
+
+function confirmPeriod() {
+  const d = new Date(pmPicked);
+  document.querySelectorAll('.period-tabs button').forEach(x => x.classList.toggle('on', x.dataset.period === currentPeriod));
+  const p = PERIODS[currentPeriod];
+  if (currentPeriod === '周报') {
+    const w = isoWeekOf(d);
+    document.getElementById('weekBig').innerHTML = `第 <span class="wk num">${w.week}</span> 周`;
+    document.getElementById('weekRange').innerHTML = `<b>${fmtD(w.monday)}</b> — <b>${fmtD(w.sunday)}</b> · <span id="periodLabel">周报</span>`;
+    document.getElementById('weekMeta').innerHTML = `<span class="dot">编号 ${w.year}-W${pad2(w.week)} · 可补填 1 年内</span>`;
+  } else if (currentPeriod === '日报') {
+    document.getElementById('weekBig').innerHTML = `${d.getMonth() + 1} 月 <span class="wk num">${d.getDate()}</span> 日`;
+    document.getElementById('weekRange').innerHTML = `<b>${fmtD(d)}</b>（周${'日一二三四五六'[d.getDay()]}） · <span id="periodLabel">日报</span>`;
+    document.getElementById('weekMeta').innerHTML = `<span class="dot">编号 ${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} · 可补填 1 年内</span>`;
+  } else {
+    const last = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+    document.getElementById('weekBig').innerHTML = `${d.getFullYear()} 年 <span class="wk num">${d.getMonth() + 1}</span> 月`;
+    document.getElementById('weekRange').innerHTML = `<b>${fmtD(d)}</b> — <b>${fmtD(last)}</b> · <span id="periodLabel">月报</span>`;
+    document.getElementById('weekMeta').innerHTML = `<span class="dot">编号 ${d.getFullYear()}-M${pad2(d.getMonth() + 1)} · 可补填 1 年内</span>`;
+  }
+  document.getElementById('fillText').innerHTML = p.fill;
+  document.getElementById('summaryTitle').textContent = p.summaryTitle;
+  document.getElementById('planTitle').textContent = p.planTitle;
+  document.getElementById('planNote').textContent = p.planNote;
+  document.getElementById('addSummary').textContent = p.addS;
+  document.getElementById('addPlan').textContent = p.addP;
+  renderBlocks('summaryBlocks', p.summary, p.autoLabel);
+  renderBlocks('planBlocks', p.plan, p.autoLabel);
+  closePeriodModal();
+  toast('已切换到 ' + pmLabel(d) + '，输入区已刷新');
+}
+
+/* ---------- toast（支持附带操作按钮，如撤销） ---------- */
+let toastTimer;
+function toast(msg, action) {
+  const t = document.getElementById('toast');
+  t.innerHTML = '';
+  t.append(msg);
+  if (action) {
+    const b = document.createElement('button');
+    b.className = 'toast-act';
+    b.textContent = action.label;
+    b.addEventListener('click', () => { action.fn(); hideToast(); });
+    t.appendChild(b);
+  }
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(hideToast, action ? 4500 : 2200);
+}
+function hideToast() {
+  clearTimeout(toastTimer);
+  document.getElementById('toast').classList.remove('show');
+}
+
+/* ---------- 评论发布（真实追加节点） ---------- */
+function publishComment() {
+  const ta = document.getElementById('commentText');
+  const text = ta.value.trim();
+  if (!text) { toast('请先输入评论内容'); ta.focus(); return; }
+  const list = document.querySelector('#view-detail .comment-list');
+  const now = new Date();
+  const time = `${now.getMonth() + 1}.${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const div = document.createElement('div');
+  div.className = 'comment-item';
+  div.innerHTML = `
+    <div class="avatar" style="background:var(--pine)">巨</div>
+    <div class="comment-body">
+      <div class="comment-head"><span class="name">巨人</span><span class="tag dept">研发部</span><span class="time">${time} · 当周评论</span></div>
+      <div class="comment-text"></div>
+    </div>
+    <div class="comment-ops"><button class="btn sm danger-ghost" onclick="toast('当周评论：直接删除，彻底移除（静态演示）')">删除</button></div>`;
+  div.querySelector('.comment-text').textContent = text;
+  list.appendChild(div);
+  ta.value = '';
+  toast('评论已发布 · 作者将收到站内通知');
+}
+
+/* ---------- 提交校验 ---------- */
+function submitReport() {
+  const hasText = [...document.querySelectorAll('#summaryBlocks textarea')].some(t => t.value.trim());
+  if (!hasText) {
+    toast('请至少填写一条「上周总结」再提交');
+    document.querySelector('#summaryBlocks textarea').focus();
+    return;
+  }
+  toast('已提交 · 修改留痕 · 可见范围内的人将收到更新通知');
+}
+
+/* ---------- 修改模式 ---------- */
+let editMode = false;
+function enterEditMode(label, cfg) {
+  editMode = true;
+  goto('editor');
+  document.getElementById('editTarget').textContent = label;
+  document.getElementById('editNotice').style.display = 'flex';
+  document.getElementById('fillNotice').style.display = 'none';
+  document.getElementById('weekBig').innerHTML = cfg.big;
+  document.getElementById('weekRange').innerHTML = cfg.range;
+  document.getElementById('weekMeta').innerHTML = cfg.meta;
+  renderBlocks('summaryBlocks', cfg.summary, null);
+  renderBlocks('planBlocks', cfg.plan, null);
+  document.getElementById('btnDraft').style.display = 'none';
+  const sub = document.getElementById('btnSubmit');
+  sub.textContent = '保存修改';
+  sub.onclick = saveEdit;
+  document.querySelectorAll('.period-tabs button').forEach(b => b.disabled = true);
+  document.querySelector('.week-actions .btn').disabled = true;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  toast('已进入修改模式 · ' + label);
+}
+function saveEdit() {
+  const hasText = [...document.querySelectorAll('#summaryBlocks textarea')].some(t => t.value.trim());
+  if (!hasText) {
+    toast('上周总结不能为空，请至少保留一条有内容的条目');
+    document.querySelector('#summaryBlocks textarea').focus();
+    return;
+  }
+  exitEditMode(false);
+  toast('修改已保存 · 已生成变更记录并通知可见范围内的人');
+}
+function exitEditMode(cancelled) {
+  editMode = false;
+  document.getElementById('editNotice').style.display = 'none';
+  document.getElementById('fillNotice').style.display = '';
+  document.getElementById('btnDraft').style.display = '';
+  const sub = document.getElementById('btnSubmit');
+  sub.textContent = '提交报告';
+  sub.onclick = submitReport;
+  document.querySelectorAll('.period-tabs button').forEach(b => b.disabled = false);
+  document.querySelector('.week-actions .btn').disabled = false;
+  renderPeriod(currentPeriod);
+  if (cancelled) toast('已取消修改 · 未生成变更记录');
+}
+
+/* ---------- 转发弹层 ---------- */
+function openForwardModal(title, excerpt, avatarChar, avatarColor) {
+  document.getElementById('fwTitle').textContent = title;
+  document.getElementById('fwExcerpt').textContent = excerpt;
+  const av = document.getElementById('fwAvatar');
+  av.textContent = avatarChar;
+  av.style.background = avatarColor;
+  document.querySelectorAll('#fwDeptChips .pm-chip, #fwUserChips .pm-chip').forEach(c => c.classList.remove('on'));
+  const note = document.getElementById('fwNote');
+  note.value = '';
+  document.getElementById('fwCount').textContent = '0';
+  updateFwConfirm();
+  document.getElementById('forwardModal').classList.add('show');
+  setTimeout(() => note.focus(), 60);
+}
+function closeForwardModal() {
+  document.getElementById('forwardModal').classList.remove('show');
+}
+document.getElementById('forwardModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeForwardModal();
+});
+['fwDeptChips', 'fwUserChips'].forEach(id => {
+  document.getElementById(id).addEventListener('click', e => {
+    const chip = e.target.closest('.pm-chip');
+    if (!chip) return;
+    chip.classList.toggle('on');
+    updateFwConfirm();
+  });
+});
+function fwSelectedNames() {
+  return [...document.querySelectorAll('#fwDeptChips .pm-chip.on, #fwUserChips .pm-chip.on')].map(c => c.dataset.name);
+}
+function updateFwConfirm() {
+  const n = fwSelectedNames().length;
+  document.getElementById('fwConfirm').textContent = n ? `确认转发（${n}）` : '确认转发';
+}
+document.getElementById('fwNote').addEventListener('input', e => {
+  document.getElementById('fwCount').textContent = e.target.value.length;
+});
+function confirmForward() {
+  const names = fwSelectedNames();
+  if (!names.length) {
+    toast('请至少选择 1 个转发对象');
+    return;
+  }
+  const note = document.getElementById('fwNote').value.trim();
+  closeForwardModal();
+  toast(`已转发给 ${names.join('、')}${note ? ' · 附言已随报告发送' : ''} · 对方将收到站内通知`);
+}
+
+/* ---------- 成员管理交互 ---------- */
+function genPass() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  let s = '';
+  for (let i = 0; i < 8; i++) s += chars[Math.floor(Math.random() * chars.length)];
+  return 'Wb#' + s;
+}
+function closeModal(id) {
+  if (id === 'aiModal') { clearInterval(aiTimer); aiBusy = false; }
+  document.getElementById(id).classList.remove('show');
+}
+
+/* ---------- AI 总结弹层（MCP / WorkBuddy） ---------- */
+let aiEngine = 'MCP', aiMode = 'shared', aiTimer = null, aiBusy = false;
+function pickEngine(btn) {
+  document.querySelectorAll('.ai-engine').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  aiEngine = btn.dataset.eng;
+}
+document.querySelectorAll('#aiDeptChips .ai-chip, #aiUserChips .ai-chip').forEach(c => {
+  c.addEventListener('click', () => {
+    if (c.dataset.d === '全部部门' && !c.classList.contains('on'))
+      document.querySelectorAll('#aiDeptChips .ai-chip').forEach(x => x.classList.remove('on'));
+    c.classList.toggle('on');
+  });
+});
+function openAiModal(mode) {
+  resetAiOutput();
+  const mine = mode === 'mine';
+  document.getElementById('aiScopePickers').style.display = mine ? 'none' : '';
+  document.getElementById('aiFixedScope').style.display = mine ? '' : 'none';
+  aiMode = mine ? 'mine' : 'shared';
+  document.getElementById('aiModal').classList.add('show');
+}
+function resetAiOutput() {
+  clearInterval(aiTimer); aiBusy = false;
+  document.getElementById('aiPlaceholder').style.display = '';
+  document.getElementById('aiBody').style.display = 'none';
+  document.getElementById('aiBody').innerHTML = '';
+  document.getElementById('aiStatus').innerHTML = '';
+  document.getElementById('aiMeta').style.display = 'none';
+  document.getElementById('aiGen').disabled = false;
+  document.getElementById('aiGen').textContent = '生成总结';
+  document.getElementById('aiCopy').style.display = 'none';
+}
+function aiPickedDesc() {
+  if (aiMode === 'mine') return '我自己的日志';
+  const ds = [...document.querySelectorAll('#aiDeptChips .ai-chip.on')].map(x => x.dataset.d);
+  const us = [...document.querySelectorAll('#aiUserChips .ai-chip.on')].map(x => x.dataset.u);
+  const parts = [];
+  if (ds.length) parts.push(ds.join('、'));
+  if (us.length) parts.push('指定人员：' + us.join('、'));
+  return parts.join(' · ') || '未选择';
+}
+function generateAiSummary() {
+  if (aiBusy) return;
+  const desc = aiPickedDesc();
+  if (!desc || desc === '未选择') { toast('请至少选择 1 个部门或人员'); return; }
+  aiBusy = true;
+  const from = document.getElementById('aiFrom').value, to = document.getElementById('aiTo').value;
+  const status = document.getElementById('aiStatus');
+  const gen = document.getElementById('aiGen');
+  gen.disabled = true; gen.textContent = '生成中…';
+  document.getElementById('aiPlaceholder').style.display = 'none';
+  const body = document.getElementById('aiBody');
+  body.style.display = '';
+  body.innerHTML = '<span class="ai-caret"></span>';
+  status.innerHTML = '<span class="spin"></span><span>正在通过 ' + aiEngine + ' 读取 [' + desc + '] 在 ' + from + ' 至 ' + to + ' 的可见日志…</span>';
+  const paras = aiMode === 'mine' ? [
+    '<h4>总体概览</h4><ul><li>本周期内共 <b>4 篇</b>日志（周报 3 · 草稿 1），连续 3 周按时提交，节奏稳定。</li></ul>',
+    '<h4>重点进展</h4><ul><li><b>NETCONF 网管</b>：告警同步模块完成联调，回归测试清单已输出并同步测试部。</li><li><b>Phase2 项目</b>：累计修复 5 个缺陷，bug-fetcher 技能完成端到端验证。</li></ul>',
+    '<h4>下周关注</h4><ul><li>FSL8147 压测环境搭建（涉及 2 台测试机申请，需交付部配合）。</li></ul>',
+    '<h4>风险提示</h4><ul><li>第 47 周周报仍为草稿，建议尽快提交以免错过统计窗口。</li></ul>'
+  ] : [
+    '<h4>总体概览</h4><ul><li>范围内共 <b>12 篇</b>已提交日志（周报 10 · 日报 2），覆盖 5 位成员；整体进度健康，无阻塞项。</li></ul>',
+    '<h4>重点进展</h4><ul><li><b>NETCONF 网管</b>：告警同步模块完成联调，回归测试清单已输出并同步测试部。</li><li><b>Phase2 项目</b>：累计修复 5 个缺陷，bug-fetcher 技能完成端到端验证。</li><li><b>OTN 性能专项</b>：P95 查询耗时从 2.1s 降至 760ms，方案复盘文档产出中。</li></ul>',
+    '<h4>下周关注</h4><ul><li>FSL8147 压测环境搭建（涉及 2 台测试机申请，需交付部配合）。</li><li>Phase2 需求基线冻结 v2.3，建议产品部对齐排期。</li></ul>',
+    '<h4>风险提示</h4><ul><li>1 篇日志为补填（早于 30 天），建议关注对应成员的工作节奏。</li></ul>'
+  ];
+  let idx = 0, ci = 0;
+  const caret = document.querySelector('.ai-caret');
+  aiTimer = setInterval(() => {
+    if (idx >= paras.length) {
+      clearInterval(aiTimer); aiBusy = false;
+      const lastCaret = body.querySelector('.ai-caret');
+      if (lastCaret) lastCaret.remove();
+      status.innerHTML = '✓ 由 ' + aiEngine + ' 生成 · 仅基于可见范围内日志';
+      const meta = document.getElementById('aiMeta');
+      meta.style.display = '';
+      meta.textContent = '范围：' + desc + ' · ' + from + ' 至 ' + to + ' · 引擎：' + aiEngine + ' · 本演示为静态模拟输出';
+      gen.disabled = false; gen.textContent = '重新生成';
+      document.getElementById('aiCopy').style.display = '';
+      return;
+    }
+    const p = paras[idx];
+    if (ci === 0) body.insertAdjacentHTML('beforeend', p.replace('<span class="ai-caret"></span>', ''));
+    const live = body.querySelectorAll('li, h4');
+    idx++; ci = 0;
+    body.querySelector('.ai-caret') && body.querySelector('.ai-caret').remove();
+    body.insertAdjacentHTML('beforeend', '<span class="ai-caret"></span>');
+  }, 420);
+}
+function copyAiResult() {
+  toast('已复制 AI 总结全文');
+}
+['memberModal', 'resetModal', 'importModal'].forEach(id => {
+  document.getElementById(id).addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeModal(id);
+  });
+});
+
+/* 新增 / 编辑成员 */
+let memEditRow = null;
+function openMemberModal(mode, btn) {
+  memEditRow = mode === 'edit' ? btn.closest('tr') : null;
+  document.getElementById('memTitle').textContent = mode === 'edit' ? '编辑成员' : '新增成员';
+  document.getElementById('memConfirm').textContent = mode === 'edit' ? '保存修改' : '确认新增';
+  const f = (id) => document.getElementById(id);
+  if (memEditRow) {
+    f('fName').value = memEditRow.dataset.name;
+    f('fAccount').value = memEditRow.dataset.account;
+    f('fDept').value = memEditRow.dataset.dept;
+    f('fRole').value = memEditRow.dataset.role === 'admin' ? '管理员' : '普通成员';
+    f('fPass').value = '（保持不变）';
+    f('fPass').classList.remove('gen-pass');
+  } else {
+    f('fName').value = ''; f('fAccount').value = ''; f('fDept').selectedIndex = 0; f('fRole').selectedIndex = 0;
+    f('fPass').value = genPass(); f('fPass').classList.add('gen-pass');
+  }
+  document.getElementById('memberModal').classList.add('show');
+  setTimeout(() => f('fName').focus(), 60);
+}
+function rollPass() {
+  const p = document.getElementById('fPass');
+  p.value = genPass(); p.classList.add('gen-pass');
+}
+function memberRowHTML(name, account, dept, role = 'member') {
+  return `<tr data-name="${name}" data-account="${account}" data-dept="${dept}" data-role="${role}" class="mem-new">
+    <td><b>${name}</b></td><td class="num">${account}</td>
+    <td><span class="tag dept">${dept}</span></td>
+    <td class="role-cell">${roleTagHTML(role)}</td>
+    <td class="st-cell"><span class="st-on">启用</span></td><td class="num">—</td>
+    <td><button class="btn sm ghost" onclick="openMemberModal('edit', this)">编辑</button> <button class="btn sm ghost" onclick="openResetModal(this)">重置口令</button> <button class="btn sm ghost" onclick="toggleMember(this)">停用</button> <button class="btn sm ghost" onclick="toggleRole(this)">${role === 'admin' ? '收回管理员' : '设为管理员'}</button></td>
+  </tr>`;
+}
+/* 分配 / 收回管理员（行内切换） */
+function toggleRole(btn) {
+  const tr = btn.closest('tr');
+  const name = tr.dataset.name;
+  if (tr.dataset.self === '1') { toast('不能修改自己的角色 · 转让管理员需由其他管理员操作'); return; }
+  const admins = document.querySelectorAll('#memberBody tr[data-role="admin"]').length;
+  if (tr.dataset.role === 'admin' && admins <= 1) { toast('平台至少保留一名管理员，无法收回最后一个'); return; }
+  const toAdmin = tr.dataset.role !== 'admin';
+  tr.dataset.role = toAdmin ? 'admin' : 'member';
+  tr.querySelector('.role-cell').innerHTML = roleTagHTML(tr.dataset.role);
+  btn.textContent = toAdmin ? '收回管理员' : '设为管理员';
+  toast(toAdmin
+    ? `已将 ${name} 设为管理员 · 其可进入成员管理与平台设置`
+    : `已收回 ${name} 的管理员权限 · 即时生效`);
+}
+function submitMember() {
+  const name = document.getElementById('fName').value.trim();
+  const account = document.getElementById('fAccount').value.trim();
+  const dept = document.getElementById('fDept').value;
+  const role = document.getElementById('fRole').value === '管理员' ? 'admin' : 'member';
+  if (!name || !account) { toast('姓名和账号为必填项'); return; }
+  if (memEditRow) {
+    memEditRow.dataset.name = name; memEditRow.dataset.account = account; memEditRow.dataset.dept = dept; memEditRow.dataset.role = role;
+    memEditRow.children[0].innerHTML = `<b>${name}</b>`;
+    memEditRow.children[1].textContent = account;
+    memEditRow.children[2].innerHTML = `<span class="tag dept">${dept}</span>`;
+    memEditRow.querySelector('.role-cell').innerHTML = roleTagHTML(role);
+    const roleBtn = memEditRow.querySelector('button[onclick="toggleRole(this)"]');
+    if (roleBtn) roleBtn.textContent = role === 'admin' ? '收回管理员' : '设为管理员';
+    closeModal('memberModal');
+    toast(`已保存 ${name} 的资料修改${role === 'admin' ? ' · 已授予管理员权限' : ''}`);
+  } else {
+    const dup = [...document.querySelectorAll('#memberBody tr')].some(tr => tr.dataset.account === account);
+    if (dup) { toast(`账号 ${account} 已存在，请换一个`); return; }
+    document.getElementById('memberBody').insertAdjacentHTML('afterbegin', memberRowHTML(name, account, dept, role));
+    closeModal('memberModal');
+    toast(`已新增成员 ${name}（${dept} · ${ROLE_LABEL[role]}）· 初始口令已生成`);
+  }
+}
+
+/* 重置口令 */
+let resetRow = null;
+function rollResetPass() { document.getElementById('rsPass').value = genPass(); }
+function openResetModal(btn) {
+  resetRow = btn.closest('tr');
+  document.getElementById('rsName').textContent = resetRow.dataset.name;
+  document.getElementById('rsAccount').textContent = resetRow.dataset.account;
+  const av = document.getElementById('rsAvatar');
+  av.textContent = resetRow.dataset.name.charAt(0);
+  av.style.background = 'var(--indigo)';
+  rollResetPass();
+  document.getElementById('resetModal').classList.add('show');
+}
+function doReset() {
+  const name = resetRow.dataset.name;
+  closeModal('resetModal');
+  toast(`已重置 ${name} 的口令 · 临时口令已复制，请线下告知本人`);
+}
+
+/* 启用 / 停用（行内切换） */
+function toggleMember(btn) {
+  const tr = btn.closest('tr');
+  const name = tr.dataset.name;
+  const cell = tr.querySelector('.st-cell');
+  const on = !!cell.querySelector('.st-on');
+  if (on) {
+    cell.innerHTML = '<span class="st-off">停用</span>';
+    tr.classList.add('mem-off');
+    btn.textContent = '启用';
+    toast(`已停用 ${name} · 其将无法登录，历史周报仍按原可见范围展示`);
+  } else {
+    cell.innerHTML = '<span class="st-on">启用</span>';
+    tr.classList.remove('mem-off');
+    btn.textContent = '停用';
+    toast(`已启用 ${name} · 可正常登录`);
+  }
+}
+
+/* Excel 导入 */
+const SAMPLE_IMPORT = [
+  { name: '王思远', account: 'wangsy', dept: '研发部', ok: true },
+  { name: '郑楠', account: 'zhengnan', dept: '产品部', ok: true },
+  { name: '许清楚', account: 'xuqc', dept: '产品部', ok: false, why: '账号已存在，跳过' },
+];
+function openImportModal() {
+  document.getElementById('dropZone').classList.remove('has');
+  document.getElementById('dropTitle').textContent = '点击选择 .xlsx / .xls 文件，或拖拽到此处';
+  document.getElementById('importPreview').style.display = 'none';
+  document.getElementById('impConfirm').disabled = true;
+  document.getElementById('fileInput').value = '';
+  document.getElementById('importModal').classList.add('show');
+}
+document.getElementById('fileInput').addEventListener('change', e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  document.getElementById('dropZone').classList.add('has');
+  document.getElementById('dropTitle').textContent = '✓ ' + f.name;
+  previewImport(false);
+});
+function previewImport(sample) {
+  const rows = SAMPLE_IMPORT.map(r => `<tr>
+    <td><b>${r.name}</b></td><td class="num">${r.account}</td>
+    <td><span class="tag dept">${r.dept}</span></td>
+    <td>${r.ok ? '<span style="color:var(--pine)">✓ 待导入</span>' : `<span class="skip">✕ ${r.why}</span>`}</td>
+  </tr>`).join('');
+  document.getElementById('impRows').innerHTML = rows;
+  document.getElementById('impStat').textContent = '成功 2 条，失败 1 条';
+  document.getElementById('impSkip').textContent = ' · 失败行不影响其余导入';
+  document.getElementById('importPreview').style.display = 'block';
+  document.getElementById('impConfirm').disabled = false;
+  document.getElementById('impConfirm').textContent = '确认导入（2）';
+}
+function confirmImport() {
+  const ok = SAMPLE_IMPORT.filter(r => r.ok);
+  ok.forEach(r => {
+    document.getElementById('memberBody').insertAdjacentHTML('afterbegin', memberRowHTML(r.name, r.account, r.dept));
+  });
+  closeModal('importModal');
+  toast(`导入成功：新增 ${ok.length} 名成员 · 已生成初始口令并通知本人`);
+}
+
+/* ---------- 平台设置 ---------- */
+const PERIOD_META = {
+  week:  { cap: 'Week',  name: '周报', preview: '2026-W47' },
+  day:   { cap: 'Day',   name: '日报', preview: '2026.11.18' },
+  month: { cap: 'Month', name: '月报', preview: '2026-11' }
+};
+function togglePeriod(input, type) {
+  const m = PERIOD_META[type];
+  const row = document.getElementById('pr' + m.cap);
+  const pv = document.getElementById('pp' + m.cap);
+  const tag = row.querySelector('.period-tag.live');
+  const on = input.checked;
+  row.classList.toggle('off', !on);
+  if (tag) tag.textContent = on ? '启用中' : '已停用';
+  pv.textContent = on ? m.preview : '未启用';
+  toast(on
+    ? `${m.name} 已启用 · 「写周报」中恢复可选`
+    : `${m.name} 已停用 · 「写周报」中不再可选，历史报告不受影响`);
+}
+function setNav(el) {
+  document.querySelectorAll('.set-nav a').forEach(a => a.classList.remove('on'));
+  el.classList.add('on');
+  const target = document.querySelector(el.getAttribute('href'));
+  if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ---------- 登录 / 注册门 ---------- */
+function authTab(which) {
+  const isLogin = which === 'login';
+  document.getElementById('tabLogin').classList.toggle('on', isLogin);
+  document.getElementById('tabReg').classList.toggle('on', !isLogin);
+  document.getElementById('authLogin').style.display = isLogin ? '' : 'none';
+  document.getElementById('authReg').style.display = isLogin ? 'none' : '';
+}
+function enterApp(msg) {
+  if (!msg) { currentRole = 'admin'; setIdentity('巨人', '网管研发部'); }
+  applyRoleUI();
+  document.getElementById('loginGate').classList.add('hide');
+  if (msg) setTimeout(() => toast(msg), 350);
+}
+function togglePass(id, btn) {
+  const input = document.getElementById(id);
+  const show = input.type === 'password';
+  input.type = show ? 'text' : 'password';
+  btn.classList.toggle('on', show);
+  btn.title = show ? '隐藏口令' : '显示口令';
+}
+function doLogin(e) {
+  e.preventDefault();
+  const acc = document.getElementById('lgAccount').value.trim();
+  const pass = document.getElementById('lgPass').value.trim();
+  if (!acc || !pass) { toast('请输入账号与口令'); return; }
+  if (acc.toLowerCase() === 'xuqc') {
+    currentRole = 'member';
+    setIdentity('许清楚', '产品部');
+    enterApp('欢迎回来，许清楚（普通成员）· 管理入口已隐藏');
+  } else {
+    currentRole = 'admin';
+    setIdentity('巨人', '网管研发部');
+    enterApp('欢迎回来，巨人（管理员）· 已进入工作台');
+  }
+}
+function doRegister(e) {
+  e.preventDefault();
+  const name = document.getElementById('rgName').value.trim();
+  const acc = document.getElementById('rgAccount').value.trim();
+  const dept = document.getElementById('rgDept').value;
+  const pass = document.getElementById('rgPass').value.trim();
+  if (!name || !acc) { toast('姓名与账号为必填项'); return; }
+  if (pass.length < 6) { toast('初始口令至少 6 位'); return; }
+  currentRole = 'member';
+  setIdentity(name, dept);
+  enterApp(`已注册并登录：${dept} · ${name}（普通成员）· 管理权限请联系管理员分配`);
+}
+
+/* ---------- 头像菜单 / 退出登录 ---------- */
+function toggleMeMenu(e) {
+  e.stopPropagation();
+  document.getElementById('meEntry').classList.toggle('open');
+}
+function closeMeMenu() {
+  document.getElementById('meEntry').classList.remove('open');
+}
+function logout(e) {
+  e.stopPropagation();
+  closeMeMenu();
+  if (dirty) { pendingLeave = { type: 'logout' }; openStashModal(); return; }
+  doLogout();
+}
+function doLogout() {
+  document.getElementById('lgPass').value = '';
+  document.getElementById('loginGate').classList.remove('hide');
+  toast('已退出登录');
+}
+document.addEventListener('click', e => {
+  closeMeMenu();
+  if (!e.target.closest('.bell')) closeNoti();
+  if (!e.target.closest('.search')) closeSearch();
+});
+
+/* 成员搜索 / 部门过滤 */
+function filterMembers(q) {
+  const kw = (q !== undefined ? q : '').trim();
+  const dept = document.getElementById('deptFilter').value;
+  document.querySelectorAll('#memberBody tr').forEach(tr => {
+    const hitKw = !kw || tr.dataset.name.includes(kw) || tr.dataset.account.includes(kw);
+    const hitDept = dept === '全部部门' || tr.dataset.dept === dept;
+    tr.style.display = hitKw && hitDept ? '' : 'none';
+  });
+}
+
+/* ---------- 变更记录 · 版本化 diff 弹层 ---------- */
+/* 每个被修改过的报告持有版本链；DETAIL_DATA 中展示的即「当前版本」 */
+const VERSIONS = {
+  46: [
+    { time: '2026.11.16 09:41', label: '初版提交',
+      summary: [
+        '完成 CPE-OTN 网管 NETCONF 告警同步模块联调，修复 3 个 Redmine 缺陷并回归通过。',
+        '修复 Phase2 项目 4 个缺陷。'
+      ],
+      plan: ['启动 FSL8147 压测环境搭建。'], attach: [] },
+    { time: '2026.11.17 09:32', label: '第 1 次修改',
+      summary: [
+        '完成 CPE-OTN 网管 NETCONF 告警同步模块联调，修复 3 个 Redmine 缺陷并回归通过。',
+        '修复 Phase2 项目 5 个缺陷，完成 bug-fetcher 技能端到端验证。',
+        '整理 NETCONF 网管回归测试清单。'
+      ],
+      plan: ['启动 FSL8147 压测环境搭建（提前申请 2 台测试机）。'],
+      attach: ['压测方案_v1.2.xlsx · 312 KB'] },
+    { time: '2026.11.18 09:15', label: '第 2 次修改 · 当前版本',
+      summary: [
+        '完成 CPE-OTN 网管 NETCONF 告警同步模块联调，修复 3 个 Redmine 缺陷并回归通过。其中告警去重策略按网监软件侧意见调整了两版，最终采用窗口聚合方案。',
+        '输出 bug-fetcher 技能与 Redmine 打通方案初稿，待评审。'
+      ],
+      plan: ['推进 FSL8147 网监软件性能压测，目标 P95 响应 < 800ms；同步启动 issue-analyzer 技能设计。'],
+      attach: ['压测方案_v1.2.xlsx · 312 KB'] }
+  ]
+};
+let diffWeek = 46, verFrom = 0, verTo = 2;
+
+function lcsOps(a, b) {
+  const n = a.length, m = b.length;
+  const dp = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+  for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--)
+    dp[i][j] = a[i] === b[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+  const ops = []; let i = 0, j = 0;
+  while (i < n && j < m) {
+    if (a[i] === b[j]) { ops.push({ t: 'ctx', s: a[i] }); i++; j++; }
+    else if (dp[i + 1][j] >= dp[i][j + 1]) { ops.push({ t: 'del', s: a[i] }); i++; }
+    else { ops.push({ t: 'add', s: b[j] }); j++; }
+  }
+  while (i < n) ops.push({ t: 'del', s: a[i++] });
+  while (j < m) ops.push({ t: 'add', s: b[j++] });
+  return ops;
+}
+function verBadge(n, role) {
+  if (role === 'from') return '<span class="tag" style="background:var(--zhu-soft);color:var(--zhu)">起点</span>';
+  if (role === 'to') return '<span class="tag" style="background:var(--pine-soft);color:var(--pine)">终点</span>';
+  return '';
+}
+/* 相邻 del/add 配对计为「修改」，孤立项分别为「移除 / 新增」 */
+function countChanges(ops) {
+  const r = { mod: 0, del: 0, add: 0 }; let i = 0;
+  while (i < ops.length) {
+    if (ops[i].t === 'del') {
+      let d = 0; while (i < ops.length && ops[i].t === 'del') { d++; i++; }
+      let a = 0; while (i < ops.length && ops[i].t === 'add') { a++; i++; }
+      if (a > 0) r.mod++; else r.del += d;
+    } else if (ops[i].t === 'add') { r.add++; i++; }
+    else i++;
+  }
+  return r;
+}
+function renderVerTimeline() {
+  const list = VERSIONS[diffWeek];
+  const curIdx = list.length - 1;
+  document.getElementById('verTimeline').innerHTML =
+    `<div class="ver-cap"><b style="font-family:var(--serif);font-size:12.5px">版本历史</b><span>共 ${list.length} 个版本</span><span class="ver-hint">「起点」= 修改前 · 「终点」= 修改后</span></div>` +
+    list.map((v, i) => {
+      const role = i === verFrom ? 'sel-from' : i === verTo ? 'sel-to' : '';
+      const roleTag = i === verFrom ? verBadge(i, 'from') : i === verTo ? verBadge(i, 'to') : '';
+      const curTag = i === curIdx && !roleTag ? '<span class="tag submitted">当前版本</span>' : '';
+      const oldTag = i === 0 && !roleTag && !curTag ? '<span class="tag" style="background:var(--paper-deep);color:var(--ink-faint)">最早</span>' : '';
+      return `<div class="ver-line ${role}">
+        <span class="ver-no">v${i + 1}</span>
+        <div class="ver-info"><b>${v.time}</b><span>${v.label.replace(' · 当前版本', '')} · 总结 ${v.summary.length} 条 · 计划 ${v.plan.length} 条${v.attach.length ? ' · 附件 ' + v.attach.length : ''}</span></div>
+        ${roleTag}${curTag}${oldTag}
+        <div class="ver-ops">
+          <button class="${i === verFrom ? 'on' : ''}" onclick="setVerPoint('from', ${i})" ${i === verFrom ? 'disabled' : ''}>起点</button>
+          <button class="to ${i === verTo ? 'on' : ''}" onclick="setVerPoint('to', ${i})" ${i === verTo ? 'disabled' : ''}>终点</button>
+        </div>
+      </div>`;
+    }).join('');
+}
+function renderVerSelects() {
+  const list = VERSIONS[diffWeek];
+  const opts = list.map((v, i) => `<option value="${i}">v${i + 1} · ${v.time}${i === list.length - 1 ? '（当前）' : ''}</option>`).join('');
+  const from = document.getElementById('verFromSel'), to = document.getElementById('verToSel');
+  from.innerHTML = opts; to.innerHTML = opts;
+  from.value = verFrom; to.value = verTo;
+}
+function renderVerDiff() {
+  const list = VERSIONS[diffWeek];
+  const A = list[verFrom], B = list[verTo];
+  const secs = [
+    { name: '上周总结', key: 'summary', A: A.summary, B: B.summary, badge: ['del', 'add'] },
+    { name: '本周计划', key: 'plan', A: A.plan, B: B.plan, badge: ['del', 'add'] },
+    { name: '附件', key: 'attach', A: A.attach, B: B.attach, badge: ['del', 'add'], attach: true }
+  ];
+  let total = 0, html = '';
+  for (const s of secs) {
+    const ops = lcsOps(s.A, s.B);
+    const ch = countChanges(ops);
+    total += ch.mod + ch.del + ch.add;
+    const noChange = ch.mod + ch.del + ch.add === 0;
+    if (noChange && s.attach && !s.A.length) continue; // 两版都无附件且无变化：整节省略
+    const parts = [];
+    if (ch.mod) parts.push(`修改 ${ch.mod}`);
+    if (ch.del) parts.push(`移除 ${ch.del}`);
+    if (ch.add) parts.push(`新增 ${ch.add}`);
+    const badge = noChange
+      ? '<span class="diff-badge unch">无变更</span>'
+      : `<span class="diff-badge ${ch.mod ? 'mod' : ch.add ? 'add' : ''}">${parts.join(' · ')}</span>`;
+    const lines = ops.map(o => {
+      const cls = o.t === 'ctx' ? 'ctx' : o.t;
+      const sign = o.t === 'ctx' ? '·' : o.t === 'del' ? '−' : '＋';
+      const text = s.attach ? `<span class="attach-in">📎 ${o.s}</span>` : o.s;
+      return `<div class="diff-line ${cls}"><span class="sign">${sign}</span><span>${text}</span></div>`;
+    }).join('');
+    html += `<div class="diff-sec"><div class="diff-sec-head">${s.name} ${badge}</div>${lines}</div>`;
+  }
+  document.getElementById('diffBody').innerHTML = html;
+  document.getElementById('diffMetaBar').innerHTML =
+    `<span>变更人 <b>巨人</b></span>
+     <span>v${verFrom + 1} <b>${A.time}</b> → v${verTo + 1} <b>${B.time}</b></span>
+     <span>共 <b>${total}</b> 处变更</span>
+     <div class="diff-legend"><span class="lg-del"><i></i>修改前（v${verFrom + 1}）</span><span class="lg-add"><i></i>修改后（v${verTo + 1}）</span></div>`;
+  document.querySelector('#diffModal .modal-head h3').innerHTML =
+    `变更记录 · <span id="diffWeekLabel">2026 年第 ${diffWeek} 周</span>`;
+  document.getElementById('diffEditedTag').textContent =
+    verTo === list.length - 1 ? `已修改 · ${list.length - 1} 次` : '历史版本对比';
+}
+function refreshDiff() { renderVerSelects(); renderVerTimeline(); renderVerDiff(); }
+function setVerPoint(which, idx) {
+  const len = VERSIONS[diffWeek].length;
+  if (which === 'from') {
+    verFrom = idx;
+    if (verTo === idx) verTo = idx > 0 ? idx - 1 : idx + 1 < len ? idx + 1 : idx;
+  } else {
+    verTo = idx;
+    if (verFrom === idx) verFrom = idx + 1 < len ? idx + 1 : idx > 0 ? idx - 1 : idx;
+  }
+  refreshDiff();
+}
+function onVerSel(which, val) { setVerPoint(which, Number(val)); }
+function swapVer() { [verFrom, verTo] = [verTo, verFrom]; refreshDiff(); }
+function openDiffModal(w) {
+  if (w != null && VERSIONS[w]) diffWeek = w;
+  else if (!VERSIONS[diffWeek]) diffWeek = 46;
+  const list = VERSIONS[diffWeek];
+  if (verFrom >= list.length - 1) verFrom = 0;
+  verTo = list.length - 1;
+  refreshDiff();
+  document.getElementById('diffModal').classList.add('show');
+}
+function closeDiffModal() {
+  document.getElementById('diffModal').classList.remove('show');
+}
+document.getElementById('diffModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeDiffModal();
+});
+
+/* ---------- 弹层键盘支持 ---------- */
+document.addEventListener('keydown', e => {
+  const modal = document.getElementById('periodModal');
+  const diff = document.getElementById('diffModal');
+  const fw = document.getElementById('forwardModal');
+  if (e.key === 'Escape') closeSearch();
+  if (document.getElementById('stashModal').classList.contains('show')) {
+    if (e.key === 'Escape') closeStash(false);
+    return;
+  }
+  if (fw.classList.contains('show')) {
+    if (e.key === 'Escape') closeForwardModal();
+    return;
+  }
+  if (diff.classList.contains('show')) {
+    if (e.key === 'Escape') closeDiffModal();
+    return;
+  }
+  for (const id of ['memberModal', 'resetModal', 'importModal', 'aiModal']) {
+    if (document.getElementById(id).classList.contains('show')) {
+      if (e.key === 'Escape') closeModal(id);
+      return;
+    }
+  }
+  if (!modal.classList.contains('show')) return;
+  if (e.key === 'Escape') closePeriodModal();
+  if (e.key === 'Enter' && document.activeElement.tagName !== 'BUTTON') { e.preventDefault(); confirmPeriod(); }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>设计规范 v1.0 — 精简工作周报平台</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  /* ---- 样式指南自身骨架（ds- 前缀，不污染组件体系）---- */
+  .ds-topbar {
+    position: sticky; top: 0; z-index: 20;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  }
+  .ds-topbar h1 { margin: 0; font-size: 16px; font-weight: 650; letter-spacing: -0.2px; }
+  .ds-topbar .ver { font-size: 12px; color: var(--text-faint); }
+  .ds-nav {
+    max-width: 1060px; margin: 0 auto; padding: 12px 24px 0;
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .ds-nav a {
+    font-size: 12.5px; color: var(--text-soft); text-decoration: none;
+    padding: 5px 11px; border-radius: 999px; background: var(--gray-100);
+  }
+  .ds-nav a:hover { color: var(--accent); background: var(--accent-soft); }
+  .ds-main { max-width: 1060px; margin: 0 auto; padding: 20px 24px 72px; }
+  .ds-sec { margin-top: 36px; }
+  .ds-sec > h2 {
+    font-size: 15px; font-weight: 650; margin: 0 0 4px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .ds-sec > h2 .no {
+    color: var(--accent); font-size: 12px; font-weight: 700;
+    background: var(--accent-soft); border-radius: 6px; padding: 2px 7px;
+    font-variant-numeric: tabular-nums;
+  }
+  .ds-sec > .ds-note { margin: 0 0 14px; font-size: 12.5px; color: var(--text-faint); }
+  .ds-grid { display: grid; gap: 10px; }
+  .ds-grid.c5 { grid-template-columns: repeat(5, 1fr); }
+  .ds-grid.c4 { grid-template-columns: repeat(4, 1fr); }
+  .ds-grid.c3 { grid-template-columns: repeat(3, 1fr); }
+  .ds-grid.c2 { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 760px) {
+    .ds-grid.c5, .ds-grid.c4, .ds-grid.c3 { grid-template-columns: repeat(2, 1fr); }
+    .ds-grid.c2 { grid-template-columns: 1fr; }
+  }
+  .swatch { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--surface); }
+  .swatch .chip { height: 52px; border-bottom: 1px solid var(--border); }
+  .swatch .meta { padding: 8px 10px; font-size: 12px; line-height: 1.5; }
+  .swatch .name { font-weight: 600; font-family: ui-monospace, Consolas, monospace; }
+  .swatch .val { color: var(--text-faint); }
+  .ds-cell { border: 1px solid var(--border); border-radius: 10px; background: var(--surface); padding: 14px; font-size: 12.5px; color: var(--text-soft); }
+  .ds-cell b { display: block; color: var(--text); font-size: 13px; margin-bottom: 2px; }
+  .ds-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .ds-col { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+  .ds-spec {
+    font-family: ui-monospace, Consolas, monospace; font-size: 11.5px;
+    color: var(--text-faint); margin-top: 8px;
+  }
+  .ds-demo-card { padding: 18px; }
+  .ds-footer { text-align: center; color: var(--text-faint); font-size: 12px; padding: 28px 0 8px; }
+</style>
+</head>
+<body>
+
+<header class="ds-topbar">
+  <h1>🎨 精简工作周报平台 · 设计规范</h1>
+  <span class="ver">v1.0 · 2026-11-17 · 与 style.css Token 层实时同步</span>
+</header>
+
+<nav class="ds-nav">
+  <a href="#principle">原则</a>
+  <a href="#color">色彩</a>
+  <a href="#type">字体</a>
+  <a href="#space">间距/圆角/阴影</a>
+  <a href="#button">按钮</a>
+  <a href="#form">表单</a>
+  <a href="#badge">徽标与评分</a>
+  <a href="#table">表格</a>
+  <a href="#feedback">提示/空态/Toast</a>
+  <a href="#detail">变更记录/评论</a>
+  <a href="#a11y">可访问性</a>
+</nav>
+
+<main class="ds-main">
+
+  <section class="ds-sec" id="principle">
+    <h2><span class="no">01</span>系统级原则</h2>
+    <p class="ds-note">三条原则来自 PRD 的产品定位，是一切视觉决策的上位依据。</p>
+    <div class="ds-grid c3">
+      <div class="ds-cell"><b>克制</b>不做装饰性渐变、大插画、动效堆砌；信息密度优先，服务「5 分钟写完周报」。</div>
+      <div class="ds-cell"><b>一致</b>任何新 UI 一律从 Token 取值，禁止裸色值 / 裸字号 / 裸圆角。</div>
+      <div class="ds-cell"><b>可达</b>正文对比 ≥ 4.5:1（WCAG AA）；键盘可达；触控目标 ≥ 36px。</div>
+    </div>
+  </section>
+
+  <section class="ds-sec" id="color">
+    <h2><span class="no">02</span>色彩</h2>
+    <p class="ds-note">中性色阶 + 品牌色 + 语义色。新增颜色必须先进 style.css 的 :root Token 层。</p>
+    <div class="ds-grid c5">
+      <div class="swatch"><div class="chip" style="background:#1a1f2b"></div><div class="meta"><div class="name">--gray-900</div><div class="val">#1a1f2b 主文字</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#5b6472"></div><div class="meta"><div class="name">--gray-600</div><div class="val">#5b6472 次级文字</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#8a93a2"></div><div class="meta"><div class="name">--gray-400</div><div class="val">#8a93a2 辅助说明</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#d0d5dd"></div><div class="meta"><div class="name">--gray-300</div><div class="val">#d0d5dd 强边框</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#e4e7ec"></div><div class="meta"><div class="name">--gray-200</div><div class="val">#e4e7ec 边框</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#f1f3f7"></div><div class="meta"><div class="name">--gray-100</div><div class="val">#f1f3f7 hover 反馈</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#f6f7f9"></div><div class="meta"><div class="name">--gray-50</div><div class="val">#f6f7f9 页面背景</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#2f6feb"></div><div class="meta"><div class="name">--accent-500</div><div class="val">#2f6feb 主操作</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#2660d6"></div><div class="meta"><div class="name">--accent-600</div><div class="val">#2660d6 主按钮 hover</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#eaf1ff"></div><div class="meta"><div class="name">--accent-soft</div><div class="val">#eaf1ff 选中底色</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#2f855a"></div><div class="meta"><div class="name">--color-success</div><div class="val">#2f855a 成功</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#b7791f"></div><div class="meta"><div class="name">--color-warning</div><div class="val">#b7791f 警告</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#d64545"></div><div class="meta"><div class="name">--color-danger</div><div class="val">#d64545 危险</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#6b46c1"></div><div class="meta"><div class="name">admin 紫</div><div class="val">#6b46c1 管理员专属</div></div></div>
+      <div class="swatch"><div class="chip" style="background:linear-gradient(90deg,#b5541a,#edf0f4,#1a5fb4)"></div><div class="meta"><div class="name">评分双色</div><div class="val">橙=负 · 蓝=正</div></div></div>
+    </div>
+    <div class="ds-spec" style="margin-top:10px">规则：语义色只表达状态；评分刻意避开红绿（防与危险/成功语义冲突）；全站唯一紫色 = 管理员徽标。</div>
+  </section>
+
+  <section class="ds-sec" id="type">
+    <h2><span class="no">03</span>字体</h2>
+    <p class="ds-note">系统字体栈，禁止引入 Web Font（本地单体应用）。数字一律 tabular-nums。</p>
+    <div class="ds-grid c2">
+      <div class="ds-cell"><b style="font-size:20px;font-weight:650">--fs-title 20px · 页面标题</b>页面级唯一大字，如「我的周报」</div>
+      <div class="ds-cell"><b style="font-size:14px;font-weight:400">--fs-base 14px · 正文基准</b>详情正文、列表行高 1.6–1.8</div>
+      <div class="ds-cell"><b style="font-size:13.5px">--fs-control 13.5px · 控件</b>按钮、输入框、表格单元格</div>
+      <div class="ds-cell"><b style="font-size:13px">--fs-small 13px · 次级文字</b>说明、副标题</div>
+      <div class="ds-cell"><b style="font-size:12px">--fs-meta 12px · 元信息</b>徽标、计数器、日志时间</div>
+      <div class="ds-cell"><b style="font-family:ui-monospace,Consolas,monospace">temp-pwd · 等宽</b>临时口令展示 <span class="temp-pwd">x7Kp2m</span></div>
+    </div>
+    <div class="ds-spec">字重：400 正文 / 500 次强调 / 600 标题按钮 / 700 评分数字与品牌标</div>
+  </section>
+
+  <section class="ds-sec" id="space">
+    <h2><span class="no">04</span>间距 / 圆角 / 阴影 / 动效</h2>
+    <p class="ds-note">间距 4px 基数；全站唯一动效时长 120ms；卡片唯一阴影 --shadow-sm。</p>
+    <div class="ds-grid c2">
+      <div class="ds-cell">
+        <b>间距阶梯</b>
+        <div class="ds-row" style="margin-top:6px">
+          <span style="width:4px;height:24px;background:var(--accent-500)"></span>
+          <span style="width:8px;height:24px;background:var(--accent-500)"></span>
+          <span style="width:12px;height:24px;background:var(--accent-500)"></span>
+          <span style="width:16px;height:24px;background:var(--accent-500)"></span>
+          <span style="width:24px;height:24px;background:var(--accent-500)"></span>
+          <span style="width:32px;height:24px;background:var(--accent-500)"></span>
+          <span class="ds-spec" style="margin:0">4 / 8 / 12 / 16 / 24 / 32</span>
+        </div>
+      </div>
+      <div class="ds-cell">
+        <b>圆角阶梯</b>
+        <div class="ds-row" style="margin-top:6px">
+          <span style="width:44px;height:30px;border-radius:7px;background:var(--gray-100);display:inline-block"></span>
+          <span style="width:44px;height:30px;border-radius:10px;background:var(--accent-soft);display:inline-block"></span>
+          <span style="width:52px;height:22px;border-radius:999px;background:var(--gray-100);display:inline-block"></span>
+          <span class="ds-spec" style="margin:0">sm 7 · md 10 · full 999</span>
+        </div>
+      </div>
+      <div class="ds-cell">
+        <b>阴影两档</b>
+        <div class="ds-row" style="margin-top:6px">
+          <span style="width:80px;height:34px;border-radius:8px;background:#fff;box-shadow:var(--shadow-sm)"></span>
+          <span style="width:80px;height:34px;border-radius:8px;background:#fff;box-shadow:var(--shadow-lg)"></span>
+          <span class="ds-spec" style="margin:0">sm 卡片 · lg 仅 toast</span>
+        </div>
+      </div>
+      <div class="ds-cell">
+        <b>焦点环 focus-ring</b>
+        <div class="ds-row" style="margin-top:6px">
+          <input type="text" value="focus 时 = 主色边框 + 3px 柔和环" style="max-width:230px">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ds-sec" id="button">
+    <h2><span class="no">05</span>按钮</h2>
+    <p class="ds-note">每屏主按钮 ≤ 1 个；危险操作必须二次确认；行内操作用 btn-sm。</p>
+    <div class="card ds-demo-card">
+      <div class="ds-col">
+        <div class="ds-row">
+          <button class="btn btn-primary">保存并提交</button>
+          <button class="btn">取消</button>
+          <button class="btn btn-ghost">导出 Excel</button>
+          <button class="btn btn-danger">删除周报</button>
+        </div>
+        <div class="ds-row">
+          <button class="btn btn-sm">编辑</button>
+          <button class="btn btn-sm">查看</button>
+          <button class="btn btn-sm btn-danger">删除</button>
+          <button class="btn btn-primary" disabled>保存中…</button>
+        </div>
+        <div class="ds-spec">spec：padding 7px 14px · 控件字号 13.5px · hover 加深底色 · disabled opacity .5</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ds-sec" id="form">
+    <h2><span class="no">06</span>表单</h2>
+    <p class="ds-note">字段错误 = 下方红字 + 边框变红，禁止只用 toast 报字段错误。</p>
+    <div class="card ds-demo-card">
+      <label class="field">
+        <span class="field-label">账号</span>
+        <input type="text" placeholder="请输入账号">
+      </label>
+      <label class="field">
+        <span class="field-label">口令 <span class="field-hint">最少 8 位，区分大小写</span></span>
+        <input type="password" value="12345678">
+      </label>
+      <label class="field" style="margin-bottom:4px">
+        <span class="field-label">上周总结 <span class="counter">128 / 2000</span></span>
+        <textarea class="plan" placeholder="两段式固定结构：先写上周总结"></textarea>
+      </label>
+      <div class="ds-spec">错误态：边框 --color-danger + 字段下方 12.5px 红字提示</div>
+    </div>
+  </section>
+
+  <section class="ds-sec" id="badge">
+    <h2><span class="no">07</span>徽标与自我评分</h2>
+    <p class="ds-note">徽标颜色即语义，不得挪作装饰；评分胶囊正=蓝、负=橙、零=灰、空=弱化字。</p>
+    <div class="card ds-demo-card">
+      <div class="ds-row" style="margin-bottom:16px">
+        <span class="badge badge-draft">未提交</span>
+        <span class="badge badge-submitted">已提交</span>
+        <span class="badge badge-view">可查看</span>
+        <span class="badge badge-comment">可评论</span>
+        <span class="badge badge-admin">成员管理员</span>
+        <span class="badge">默认</span>
+      </div>
+      <div class="ds-row" style="margin-bottom:16px">
+        <span class="score pos">+5</span>
+        <span class="score pos">+3</span>
+        <span class="score zero">0</span>
+        <span class="score neg">-2</span>
+        <span class="score neg">-5</span>
+        <span class="score none">未评分</span>
+      </div>
+      <div class="score-box" style="max-width:520px">
+        <div class="score-head">
+          <span class="score-value" id="demoScoreValue">+2</span>
+          <span class="score-meaning">自我评分（对上周总结）</span>
+        </div>
+        <input type="range" id="demoScore" min="-5" max="5" step="1" value="2">
+        <div class="ticks"><span>-5</span><span>0</span><span>+5</span></div>
+      </div>
+      <div class="ds-spec">滑杆轨道渐变 #f0c4a8 → #edf0f4 → #b9d3f7（负→零→正隐喻）；必须保留原生 input[type=range] 保证键盘可达</div>
+    </div>
+  </section>
+
+  <section class="ds-sec" id="table">
+    <h2><span class="no">08</span>表格</h2>
+    <p class="ds-note">数字列 tabular-nums；行内操作 btn-sm 靠右；长表必须包 .table-scroll。</p>
+    <div class="card">
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>周期</th><th>状态</th><th>自我评分</th><th>可查看</th><th>评论数</th><th>最后修改</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td>2026-W46</td><td><span class="badge badge-submitted">已提交</span></td><td><span class="score pos">+3</span></td><td class="num">4 人</td><td class="num">2</td><td class="num">11-16 18:02</td><td><button class="btn btn-sm">查看</button><button class="btn btn-sm">编辑</button></td></tr>
+            <tr><td>2026-W47</td><td><span class="badge badge-draft">未提交</span></td><td><span class="score neg">-1</span></td><td class="num">0 人</td><td class="num">0</td><td class="num">11-17 09:20</td><td><button class="btn btn-sm">编辑</button><button class="btn btn-sm">删除</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="ds-sec" id="feedback">
+    <h2><span class="no">09</span>提示 / 空态 / Toast</h2>
+    <p class="ds-note">notice 做页面内说明；toast 只做操作结果反馈；越权与不存在用同一空态文案。</p>
+    <div class="card ds-demo-card">
+      <div class="ds-col">
+        <div class="notice">这是一条信息说明：首次登录使用的是临时口令，请先修改口令。</div>
+        <div class="notice notice-warn">这是一条警告：周报提交后仍可修改，所有修改都会留下变更记录。</div>
+        <div class="card">
+          <div class="empty-state">
+            <h3>暂无可查看的周报</h3>
+            <p>当其他成员将周报授权给你时，会出现在这里。</p>
+            <button class="btn">刷新</button>
+          </div>
+        </div>
+        <div class="ds-row">
+          <button class="btn" id="demoToastOk">触发成功 Toast</button>
+          <button class="btn" id="demoToastErr">触发失败 Toast</button>
+        </div>
+        <div class="ds-spec">toast：底部居中固定，深底白字，ok 绿深底 #276749 / err 红深底 #9b2c2c</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ds-sec" id="detail">
+    <h2><span class="no">10</span>变更记录 / 评论</h2>
+    <p class="ds-note">圆点颜色区分变更类型；diff 双色块展示旧值/新值；权限类记录按 PRD 脱敏。</p>
+    <div class="card ds-demo-card ds-grid c2">
+      <div>
+        <div class="section-title">变更记录</div>
+        <ul class="changelog">
+          <li>
+            <span class="log-dot dot-score"></span>
+            <div class="log-main">
+              自我评分由 +4 改为 +2
+              <div class="log-meta">许清楚 · 2026-11-17 09:12</div>
+            </div>
+          </li>
+          <li>
+            <span class="log-dot dot-body"></span>
+            <div class="log-main">
+              上周总结有修改
+              <div class="log-diff">
+                <pre class="log-old">- 完成了网管 V2 的评审准备</pre>
+                <pre class="log-new">+ 完成了网管 V2 的评审准备与冒烟测试</pre>
+              </div>
+              <div class="log-meta">许清楚 · 2026-11-16 18:02</div>
+            </div>
+          </li>
+          <li>
+            <span class="log-dot dot-permission"></span>
+            <div class="log-main">
+              权限名单有调整（已脱敏）
+              <div class="log-meta">许清楚 · 2026-11-15 10:31</div>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <div>
+        <div class="section-title">评论</div>
+        <div class="comment">
+          <div class="comment-head"><span class="comment-author">许清楚</span><span class="comment-time">2026-11-16 19:20</span></div>
+          <div class="comment-body">冒烟测试的结论补一句吧，方便下周直接引用。</div>
+        </div>
+        <div class="comment">
+          <div class="comment-head"><span class="comment-author">我</span><span class="comment-time">2026-11-17 08:40</span><button class="btn btn-sm btn-ghost" style="margin-left:auto">删除</button></div>
+          <div class="comment-body">好的，今晚补上。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ds-sec" id="a11y">
+    <h2><span class="no">11</span>可访问性（WCAG AA）</h2>
+    <p class="ds-note">v1.0 对比度实测结论与整改方向，详见 docs/design-system-v1.0.md 第 4 节。</p>
+    <div class="ds-grid c3">
+      <div class="ds-cell"><b>✅ 已达标</b>正文 16:1 · 次级 6.4:1 · 主按钮白字 4.6:1</div>
+      <div class="ds-cell"><b>⚠️ 限制使用</b>--gray-400 对比 3.1:1，仅限辅助说明，不得承载必读信息</div>
+      <div class="ds-cell"><b>❌ v1.1 整改</b>三个徽标前景色加深：warn→#8a5a12 · success→#22703f · accent→#2458c7</div>
+    </div>
+    <div class="ds-spec" style="margin-top:10px">硬性要求：Enter 提交登录 · 滑杆方向键逐档调整 · 行内按钮命中区 ≥ 36px · 禁止全局去掉 outline · 200% 字号不溢出</div>
+  </section>
+
+  <div class="ds-footer">精简工作周报平台 设计规范 v1.0 · 像素君 · 书面规范见 docs/design-system-v1.0.md</div>
+</main>
+
+<script>
+  // 评分滑杆实时回显（与线上编辑页同逻辑：正=蓝 / 零=灰 / 负=橙 / 未评分弱化）
+  (function () {
+    var input = document.getElementById('demoScore');
+    var value = document.getElementById('demoScoreValue');
+    function refresh() {
+      var v = parseInt(input.value, 10);
+      if (v > 0) { value.textContent = '+' + v; value.className = 'score-value'; value.style.color = '#1a5fb4'; }
+      else if (v < 0) { value.textContent = String(v); value.className = 'score-value'; value.style.color = '#b5541a'; }
+      else { value.textContent = '0'; value.className = 'score-value'; value.style.color = 'var(--text-soft)'; }
+    }
+    input.addEventListener('input', refresh);
+    refresh();
+  })();
+
+  // Toast 演示（与线上 .toast 同类名同定位）
+  function showToast(text, cls) {
+    document.querySelectorAll('.toast').forEach(function (t) { t.remove(); });
+    var t = document.createElement('div');
+    t.className = 'toast' + (cls ? ' ' + cls : '');
+    t.textContent = text;
+    document.body.appendChild(t);
+    setTimeout(function () { t.remove(); }, 2000);
+  }
+  document.getElementById('demoToastOk').addEventListener('click', function () { showToast('已保存', 'ok'); });
+  document.getElementById('demoToastErr').addEventListener('click', function () { showToast('保存失败：网络异常', 'err'); });
+</script>
+</body>
+</html>

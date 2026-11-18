@@ -1,0 +1,13 @@
+{
+  "name": "weekly-report",
+  "version": "1.0.0",
+  "private": true,
+  "description": "精简工作周报平台 —— 本地单体应用，零第三方依赖",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --no-warnings server.js"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  }
+}
